@@ -543,7 +543,7 @@ if [[ $MYMENU == *"apache"* ]]; then
 			cd
 		else
 			printf "${IRed}!!!! PHPLITEADMIN not installed! ${IWhite}\r\n"
-			rm -rf /var/www/html/phpliteadmin
+			cd ; rm -rf /var/www/html/phpliteadmin
 		fi
 		
 		mkdir dbs
