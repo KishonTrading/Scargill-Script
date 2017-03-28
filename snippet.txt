@@ -274,6 +274,15 @@ if [[ "$(ping -c 1 8.8.8.8 | grep '100%' )" != "" ]]; then
   printf "${IRed}!!!! No internet connection available, aborting! ${IWhite}\r\n"
   exit 0
 fi
+ 
+DISTRO=$(lsb_release -r|cut -d: -f2|tr -d '[:space:]')
+
+if [[ $OPSYS == *"UBUNTU"* ]]; then
+  if [ $DISTRO != "16.04" ] ; then 
+      printf "${IRed}!!!! Wrong version of Ubuntu - not 16.04, aborting! ${IWhite}\r\n"
+      exit 0
+  fi
+fi
 
 apt-get -y update && apt-get install -y sudo
 
