@@ -228,6 +228,8 @@ if [[ "$(ping -c 1 8.8.8.8 | grep '100%' )" != "" ]]; then
   exit 0
 fi
 
+apt-get -y update && apt-get install -y sudo
+
 # user pi existance/creation
 if [[ $USER != "pi" ]]; then
     printf "\r\n${IRed}!!!! You MUST be logged in as user 'pi' with sudo privileges to continue. If \"root\", creating \"pi\" now ${IWhite}\r\n"
