@@ -237,6 +237,7 @@ if [[ $USER != "pi" ]]; then
         getent passwd pi > /dev/null 2&>1
         if [ $? -eq 0 ]; then
             printf "${IRed}!!!! User \"pi\" already exists, logout as root and redo procedure as pi. ${IWhite}\r\n"
+			cp $(readlink -f $0) /home/pi && chown pi.pi /home/pi/$0 && chmod 755 /home/pi/$0
         else
             adduser --quiet --disabled-password --shell /bin/bash --home /home/pi --gecos "User" pi
             echo "pi:password" | chpasswd
@@ -245,6 +246,7 @@ if [[ $USER != "pi" ]]; then
             chmod 0440 /etc/sudoers.d/pi
             chmod 4755 /usr/bin/sudo # bug of dietpi 145, solved in future 146: https://github.com/Fourdee/DietPi/issues/794
             printf "${IRed}!!!! User PI created, password is \"password\". Logout as root and login as pi, and redo the procedure ${IWhite}\r\n"
+			cp $(readlink -f $0) /home/pi && chown pi.pi /home/pi/$0 && chmod 755 /home/pi/$0
         fi
         exit
     else
