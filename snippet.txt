@@ -670,7 +670,7 @@ if [[ $MYMENU == *"nodered"* ]]; then
 			sudo systemctl daemon-reload
 		fi
 
-	    cd # without this, you'll end up creating the .node-red folder in ~/node-v6.10.0-linux-armv6l (where you were after line 591 in case of armv6 arch)
+	    cd
 	    mkdir .node-red
 	    cd .node-red
 	    printstatus "Installing Nodes"
