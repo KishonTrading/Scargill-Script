@@ -695,7 +695,7 @@ if [[ $MYMENU == *"nodejs"* ]]; then
     printstatus "Installing NodeJS"
     if [[ $(uname -m) == *"armv6"* ]]; then
         printstatus "Installing ARM6 version"
-        wget --no-check-certificate https://nodejs.org/dist/v6.10.1/node-v6.10.0-linux-armv6l.tar.xz
+        wget --no-check-certificate https://nodejs.org/dist/latest-v6.x/node-v6.10.1-linux-armv64.tar.xz
         [ $? -eq 0 ] && nodejs=1
         tar -xvf node-v6.10.1-linux-armv6l.tar.xz
         cd node-v6.10.1-linux-armv6l
