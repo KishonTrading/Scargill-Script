@@ -17,6 +17,7 @@
 ## 6. Do not access this script as SUDO.
 ##
 ## See http://tech.scargill.net/orange-pi-pc-battle-of-the-pis/
+## 29/03/2017 Tested on NanoPi Neo2 using Armbian nightly build of 27/03/2017 - added temperature and processor checks
 ## 25/03/2017 Tested on NanoPi M1+, host updating added and defaults on inputs added
 ## 18/03/2017 Tested on NanoPi M3
 ## 16/03/2017 Modifications to handle experimental Android Phone setup
