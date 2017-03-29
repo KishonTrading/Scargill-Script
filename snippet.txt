@@ -209,14 +209,55 @@ task_end(){
 }
 
 
-printstatus() {
-    h=$(($SECONDS/3600));
-    m=$((($SECONDS/60)%60));
-    s=$(($SECONDS%60));
-    printf "\r\n${BIGreen}  ====\r\n  ==== ${BIYellow}$1 - ${BIGreen}Total: %02dh:%02dm:%02ds \r\n${BIGreen}  ====${BIWhite}\r\n"  $h $m $s;
+# credits to DietPi
+
+CPU_TEMP_CURRENT='Unknown'
+CPU_TEMP_PRINT='Unknown'
+ACTIVECORES=$(grep -c processor /proc/cpuinfo)
+
+#Array to store possible locations for temp read.
+aFP_TEMPERATURE=(
+    '/sys/class/thermal/thermal_zone0/temp'
+    '/sys/devices/platform/sunxi-i2c.0/i2c-0/0-0034/temp1_input'
+    '/sys/class/hwmon/hwmon0/device/temp_label'
+)
+
+Obtain_Cpu_Temp(){
+    for ((i=0; i<${#aFP_TEMPERATURE[@]}; i++))
+    do
+            if [ -f "${aFP_TEMPERATURE[$i]}" ]; then
+                    CPU_TEMP_CURRENT=$(cat "${aFP_TEMPERATURE[$i]}")
+                    # - Some devices (pine) provide 2 digit output, some provide a 5 digit ouput.
+                    #       So, If the value is over 1000, we can assume it needs converting to 1'c
+                    if (( $CPU_TEMP_CURRENT >= 1000 )); then
+                            CPU_TEMP_CURRENT=$( echo -e "$CPU_TEMP_CURRENT" | awk '{print $1/1000}' | xargs printf "%0.0f" )
+                    fi
+                    if (( $CPU_TEMP_CURRENT >= 70 )); then
+                            CPU_TEMP_PRINT="\e[91mWarning: $CPU_TEMP_CURRENT'c\e[0m"
+                    elif (( $CPU_TEMP_CURRENT >= 60 )); then
+                            CPU_TEMP_PRINT="\e[38;5;202m$CPU_TEMP_CURRENT'c\e[0m"
+                    elif (( $CPU_TEMP_CURRENT >= 50 )); then
+                            CPU_TEMP_PRINT="\e[93m$CPU_TEMP_CURRENT'c\e[0m"
+                    elif (( $CPU_TEMP_CURRENT >= 40 )); then
+                            CPU_TEMP_PRINT="\e[92m$CPU_TEMP_CURRENT'c\e[0m"
+                    elif (( $CPU_TEMP_CURRENT >= 30 )); then
+                            CPU_TEMP_PRINT="\e[96m$CPU_TEMP_CURRENT'c\e[0m"
+                    else
+                            CPU_TEMP_PRINT="\e[96m$CPU_TEMP_CURRENT'c\e[0m"
+                    fi
+                    break
+            fi
+    done
 }
 
 
+printstatus() {
+    Obtain_Cpu_Temp
+    h=$(($SECONDS/3600));
+    m=$((($SECONDS/60)%60));
+    s=$(($SECONDS%60));
+    printf "\r\n${BIGreen}  ====\r\n  ==== ${BIYellow}$1 - ${BIGreen}Total: %02dh:%02dm:%02ds Cores/Temp $ACTIVECORES - $CPU_TEMP_PRINT \r\n${BIGreen}  ====${BIWhite}\r\n"  $h $m $s;
+}
 
 
 ############################################################################
@@ -243,7 +284,8 @@ if [[ $OPSYS == *"UBUNTU"* ]]; then
   fi
 fi
 
-apt-get -y update > /dev/null 2&>1 && apt-get install -y sudo > /dev/null 2&>1
+# install sudo on devices without it
+[ ! -x /usr/bin/sudo ] && apt-get $AQUIET -y update > /dev/null 2&>1 && apt-get $AQUIET -y install sudo > /dev/null 2&>1
 
 # user pi existance/creation
 if [[ $USER != "pi" ]]; then
@@ -496,8 +538,8 @@ if [[ $MYMENU == *"mosquitto"* ]]; then
     else
         wget http://repo.mosquitto.org/debian/mosquitto-repo.gpg.key -O - | sudo apt-key add -
         if [ $? -eq 0 ]; then
-	        echo "deb http://repo.mosquitto.org/debian jessie main" |sudo tee /etc/apt/sources.list.d/mosquitto-jessie.list
-    	    sudo apt-get $AQUIET -y update && sudo apt-get $AQUIET -y install mosquitto mosquitto-clients
+	       echo "deb http://repo.mosquitto.org/debian jessie main" |sudo tee /etc/apt/sources.list.d/mosquitto-jessie.list
+    	   sudo apt-get $AQUIET -y update && sudo apt-get $AQUIET -y install mosquitto mosquitto-clients
 			[ $? -eq 0 ] && mosquitto=1 # mosquitto installed
 		fi
     fi
@@ -568,75 +610,75 @@ if [[ $MYMENU == *"apache"* ]]; then
 		mkdir dbs
 		sqlite3 /home/pi/dbs/iot.db << EOF
 		CREATE TABLE IF NOT EXISTS \`pinDescription\` (
-		  \`pinID\` INTEGER PRIMARY KEY NOT NULL,
-		  \`pinNumber\` varchar(2) NOT NULL,
-		  \`pinDescription\` varchar(255) NOT NULL
+		 \`pinID\` INTEGER PRIMARY KEY NOT NULL,
+		 \`pinNumber\` varchar(2) NOT NULL,
+		 \`pinDescription\` varchar(255) NOT NULL
 		);
 		CREATE TABLE IF NOT EXISTS \`pinDirection\` (
-		  \`pinID\` INTEGER PRIMARY KEY NOT NULL,
-		  \`pinNumber\` varchar(2) NOT NULL,
-		  \`pinDirection\` varchar(3) NOT NULL
+		 \`pinID\` INTEGER PRIMARY KEY NOT NULL,
+		 \`pinNumber\` varchar(2) NOT NULL,
+		 \`pinDirection\` varchar(3) NOT NULL
 		);
 		CREATE TABLE IF NOT EXISTS \`pinStatus\` (
-		  \`pinID\` INTEGER PRIMARY KEY NOT NULL,
-		  \`pinNumber\` varchar(2)  NOT NULL,
-		  \`pinStatus\` varchar(1) NOT NULL
+		 \`pinID\` INTEGER PRIMARY KEY NOT NULL,
+		 \`pinNumber\` varchar(2)  NOT NULL,
+		 \`pinStatus\` varchar(1) NOT NULL
 		);
 		CREATE TABLE IF NOT EXISTS \`users\` (
-		  \`userID\` INTEGER PRIMARY KEY NOT NULL,
-		  \`username\` varchar(28) NOT NULL,
-		  \`password\` varchar(64) NOT NULL,
-		  \`salt\` varchar(8) NOT NULL
+		 \`userID\` INTEGER PRIMARY KEY NOT NULL,
+		 \`username\` varchar(28) NOT NULL,
+		 \`password\` varchar(64) NOT NULL,
+		 \`salt\` varchar(8) NOT NULL
 		);
 		CREATE TABLE IF NOT EXISTS \`device_list\` (
-		  \`device_name\` varchar(80) NOT NULL DEFAULT '',
-		  \`device_description\` varchar(80) DEFAULT NULL,
-		  \`device_attribute\` varchar(80) DEFAULT NULL,
-		  \`logins\` int(11) DEFAULT NULL,
-		  \`creation_date\` datetime DEFAULT NULL,
-		  \`last_update\` datetime DEFAULT NULL,
-		  PRIMARY KEY (\`device_name\`)
+		 \`device_name\` varchar(80) NOT NULL DEFAULT '',
+		 \`device_description\` varchar(80) DEFAULT NULL,
+		 \`device_attribute\` varchar(80) DEFAULT NULL,
+		 \`logins\` int(11) DEFAULT NULL,
+		 \`creation_date\` datetime DEFAULT NULL,
+		 \`last_update\` datetime DEFAULT NULL,
+		 PRIMARY KEY (\`device_name\`)
 		);
 
 		CREATE TABLE IF NOT EXISTS \`readings\` (
-		  \`recnum\` INTEGER PRIMARY KEY,
-		  \`location\` varchar(20),
-		  \`value\` int(11) NOT NULL,
-		  \`logged\` timestamp not NULL DEFAULT CURRENT_TIMESTAMP ,
-		  \`device_name\` varchar(40) not null,
-		  \`topic\` varchar(40) not null
+		 \`recnum\` INTEGER PRIMARY KEY,
+		 \`location\` varchar(20),
+		 \`value\` int(11) NOT NULL,
+		 \`logged\` timestamp not NULL DEFAULT CURRENT_TIMESTAMP ,
+		 \`device_name\` varchar(40) not null,
+		 \`topic\` varchar(40) not null
 		);
 
 
 		CREATE TABLE IF NOT EXISTS \`pins\` (
-		  \`gpio0\` int(11) NOT NULL DEFAULT '0',
-		  \`gpio1\` int(11) NOT NULL DEFAULT '0',
-		  \`gpio2\` int(11) NOT NULL DEFAULT '0',
-		  \`gpio3\` int(11) NOT NULL DEFAULT '0'
+		 \`gpio0\` int(11) NOT NULL DEFAULT '0',
+		 \`gpio1\` int(11) NOT NULL DEFAULT '0',
+		 \`gpio2\` int(11) NOT NULL DEFAULT '0',
+		 \`gpio3\` int(11) NOT NULL DEFAULT '0'
 		);
 		INSERT INTO PINS VALUES(0,0,0,0);
 		CREATE TABLE IF NOT EXISTS \`temperature_record\` (
-		  \`device_name\` varchar(64) NOT NULL,
-		  \`rec_num\` INTEGER PRIMARY KEY,
-		  \`temperature\` float NOT NULL,
-		  \`date_time\` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+		 \`device_name\` varchar(64) NOT NULL,
+		 \`rec_num\` INTEGER PRIMARY KEY,
+		 \`temperature\` float NOT NULL,
+		 \`date_time\` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 		);
 		CREATE TABLE IF NOT EXISTS \`Device\` (
-		  \`DeviceID\` INTEGER PRIMARY KEY,
-		  \`DeviceName\` TEXT NOT NULL
+		 \`DeviceID\` INTEGER PRIMARY KEY,
+		 \`DeviceName\` TEXT NOT NULL
 		);
 		CREATE TABLE IF NOT EXISTS \`DeviceData\` (
-		  \`DataID\` INTEGER PRIMARY KEY,
+		 \`DataID\` INTEGER PRIMARY KEY,
 		DeviceID INTEGER,
-		  \`DataName\` TEXT, FOREIGN KEY(DeviceID ) REFERENCES Device(DeviceID)
+		 \`DataName\` TEXT, FOREIGN KEY(DeviceID ) REFERENCES Device(DeviceID)
 		);
 		CREATE TABLE IF NOT EXISTS \`Data\` (
 		SequenceID INTEGER PRIMARY KEY,
-		  \`DeviceID\` INTEGER NOT NULL,
-		  \`DataID\` INTEGER NOT NULL,
-		  \`DataValue\` NUMERIC NOT NULL,
-		  \`epoch\` NUMERIC NOT NULL,
-		  \`timestamp\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP , FOREIGN KEY(DataID, DeviceID ) REFERENCES DeviceData(DAtaID, DeviceID )
+		 \`DeviceID\` INTEGER NOT NULL,
+		 \`DataID\` INTEGER NOT NULL,
+		 \`DataValue\` NUMERIC NOT NULL,
+		 \`epoch\` NUMERIC NOT NULL,
+		 \`timestamp\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP , FOREIGN KEY(DataID, DeviceID ) REFERENCES DeviceData(DAtaID, DeviceID )
 		);
 EOF
     
@@ -660,7 +702,7 @@ if [[ $MYMENU == *"nodejs"* ]]; then
         cd node-v6.10.1-linux-armv6l
         sudo cp -R * /usr/local/
     else
-	    if [[$CHECK64 == *"aarch64"*]]; then
+	   if [[$CHECK64 == *"aarch64"*]]; then
 
            printstatus "Installing ARM64 version"
            wget --no-check-certificate https://nodejs.org/dist/latest-v6.x/node-v6.10.1-linux-arm64.tar.xz
@@ -702,88 +744,88 @@ if [[ $MYMENU == *"nodered"* ]]; then
 			sudo systemctl daemon-reload
 		fi
 
-	    cd
-	    mkdir .node-red
-	    cd .node-red
-	    printstatus "Installing Nodes"
-	    npm $NQUIET install moment
-	    npm $NQUIET install node-red-contrib-config
-	    npm $NQUIET install node-red-contrib-grove
-	    npm $NQUIET install node-red-contrib-bigtimer
-	    npm $NQUIET install node-red-contrib-esplogin
-	    npm $NQUIET install node-red-contrib-timeout
-	    npm $NQUIET install node-red-node-openweathermap
-	    npm $NQUIET install node-red-node-google
-	    npm $NQUIET install node-red-node-sqlite
-	    npm $NQUIET install node-red-node-emoncms
-	    npm $NQUIET install node-red-node-geofence
-	    npm $NQUIET install node-red-contrib-ivona
-	    npm $NQUIET install node-red-contrib-moment
-	    npm $NQUIET install node-red-contrib-particle
-	    npm $NQUIET install node-red-contrib-web-worldmap
-	    npm $NQUIET install node-red-contrib-graphs
-	    npm $NQUIET install node-red-contrib-isonline
-	    npm $NQUIET install node-red-node-ping
-	    npm $NQUIET install node-red-node-random
-	    npm $NQUIET install node-red-node-smooth
-	    npm $NQUIET install node-red-contrib-npm
-	    npm $NQUIET install node-red-contrib-file-function
-	    npm $NQUIET install node-red-contrib-boolean-logic
-	    npm $NQUIET install node-red-node-arduino
-	    npm $NQUIET install node-red-contrib-blynk-websockets
-	    npm $NQUIET install node-red-dashboard
-	    npm $NQUIET install node-red-node-darksky
-	    npm $NQUIET install node-red-node-serialport
+	   cd
+	   mkdir .node-red
+	   cd .node-red
+	   printstatus "Installing Nodes"
+	   npm $NQUIET install moment
+	   npm $NQUIET install node-red-contrib-config
+	   npm $NQUIET install node-red-contrib-grove
+	   npm $NQUIET install node-red-contrib-bigtimer
+	   npm $NQUIET install node-red-contrib-esplogin
+	   npm $NQUIET install node-red-contrib-timeout
+	   npm $NQUIET install node-red-node-openweathermap
+	   npm $NQUIET install node-red-node-google
+	   npm $NQUIET install node-red-node-sqlite
+	   npm $NQUIET install node-red-node-emoncms
+	   npm $NQUIET install node-red-node-geofence
+	   npm $NQUIET install node-red-contrib-ivona
+	   npm $NQUIET install node-red-contrib-moment
+	   npm $NQUIET install node-red-contrib-particle
+	   npm $NQUIET install node-red-contrib-web-worldmap
+	   npm $NQUIET install node-red-contrib-graphs
+	   npm $NQUIET install node-red-contrib-isonline
+	   npm $NQUIET install node-red-node-ping
+	   npm $NQUIET install node-red-node-random
+	   npm $NQUIET install node-red-node-smooth
+	   npm $NQUIET install node-red-contrib-npm
+	   npm $NQUIET install node-red-contrib-file-function
+	   npm $NQUIET install node-red-contrib-boolean-logic
+	   npm $NQUIET install node-red-node-arduino
+	   npm $NQUIET install node-red-contrib-blynk-websockets
+	   npm $NQUIET install node-red-dashboard
+	   npm $NQUIET install node-red-node-darksky
+	   npm $NQUIET install node-red-node-serialport
 		npm $NQUIET install node-red-contrib-owntracks
 		npm $NQUIET install node-red-contrib-chatbot
 		
-	    sudo npm $NQUIET install bcryptjs
-	    
-	    if [[ $OPSYS == *"RASPBIAN"* ]]; then
-	        sudo sed -i -e 's#exit 0#chmod 777 /dev/ttyAMA0\nexit 0#g' /etc/rc.local
-	        sudo apt-get -y install python{,3}-rpi.gpio
-	        npm $NQUIET install node-red-contrib-gpio
-	        npm $NQUIET install raspi-io
-	    fi
-	    
-	    cd ~/.node-red/
-	    sudo service nodered start ; while [ ! -f settings.js ] ; do sudo sleep 1 ; done ; sudo service nodered stop;
-	    echo " "
-	    bcryptadminpass=$(node -e "console.log(require('bcryptjs').hashSync(process.argv[1], 8));" $adminpass)
-	    bcryptuserpass=$(node -e "console.log(require('bcryptjs').hashSync(process.argv[1], 8));" $userpass)
-	    # echo Encrypted password: $bcryptpass
-	    cp settings.js settings.js.bak-pre-crypt
+	   sudo npm $NQUIET install bcryptjs
+	   
+	   if [[ $OPSYS == *"RASPBIAN"* ]]; then
+	       sudo sed -i -e 's#exit 0#chmod 777 /dev/ttyAMA0\nexit 0#g' /etc/rc.local
+	       sudo apt-get -y install python{,3}-rpi.gpio
+	       npm $NQUIET install node-red-contrib-gpio
+	       npm $NQUIET install raspi-io
+	   fi
+	   
+	   cd ~/.node-red/
+	   sudo service nodered start ; while [ ! -f settings.js ] ; do sudo sleep 1 ; done ; sudo service nodered stop;
+	   echo " "
+	   bcryptadminpass=$(node -e "console.log(require('bcryptjs').hashSync(process.argv[1], 8));" $adminpass)
+	   bcryptuserpass=$(node -e "console.log(require('bcryptjs').hashSync(process.argv[1], 8));" $userpass)
+	   # echo Encrypted password: $bcryptpass
+	   cp settings.js settings.js.bak-pre-crypt
 		
 		datetimestamp=`date +%Y-%m-%d_%Hh%Mm`
 		cd ~/.node-red
 		# this will add the TOP piece of code for non-vol variables in settings.js
 		gawk -i inplace -v INPLACE_SUFFIX=-$datetimestamp '!found && /module.exports/ { print " var mySettings;\n try {\n mySettings = require(\"/home/pi/.node-red/redvars.js\");\n } catch(err) {\n mySettings = {};\n }\n"; found=1 } 1' settings.js
 		
-	    sudo sed -i -e 's#functionGlobalContext: {#\/\/ functionGlobalContext: {#g' settings.js
-	    sudo sed -i -e 's#\s\s\s\s\},#    \/\/ },#g' settings.js
-	    sudo sed -i -e 's#^\}#,#g' settings.js
-	    sudo echo " " > tmpfile
-	    sudo echo "    httpStatic: '/home/pi/.node-red/public'," >> tmpfile
-	    sudo echo "    functionGlobalContext: {" >> tmpfile
-	    sudo echo "        os:require('os')," >> tmpfile
-	    sudo echo "        moment:require('moment'), " >> tmpfile
-	    sudo echo "        fs:require('fs'), " >> tmpfile
-	    sudo echo "        mySettings:mySettings " >> tmpfile
-	    sudo echo "    }," >> tmpfile
-	    sudo echo " " >> tmpfile
-	    sudo echo "    adminAuth: {" >> tmpfile
-	    sudo echo "        type: \"credentials\"," >> tmpfile
-	    sudo echo "        users: [{" >> tmpfile
-	    sudo echo "            username: \"$adminname\"," >> tmpfile
-	    sudo echo "            password: \"$bcryptadminpass\"," >> tmpfile
-	    sudo echo "            permissions: \"*\"" >> tmpfile
-	    sudo echo "        }]" >> tmpfile
-	    sudo echo "    }," >> tmpfile
-	    sudo echo " " >> tmpfile
-	    sudo echo "    httpNodeAuth: {user:\"$username\", pass:\"$bcryptuserpass\"}" >> tmpfile
-	    sudo echo "}" >> tmpfile
-	    sudo cat tmpfile >> settings.js
-	    sudo rm -f tmpfile
+	   sudo sed -i -e 's#functionGlobalContext: {#\/\/ functionGlobalContext: {#g' settings.js
+	   sudo sed -i -e 's#\s\s\s\s\},#    \/\/ },#g' settings.js
+	   sudo sed -i -e 's#^\}#,#g' settings.js
+	   sudo echo " " > tmpfile
+	   sudo echo "    httpStatic: '/home/pi/.node-red/public'," >> tmpfile
+	   sudo echo "    functionGlobalContext: {" >> tmpfile
+	   sudo echo "        os:require('os')," >> tmpfile
+	   sudo echo "        moment:require('moment'), " >> tmpfile
+	   sudo echo "        fs:require('fs'), " >> tmpfile
+	   sudo echo "        mySettings:mySettings " >> tmpfile
+	   sudo echo "    }," >> tmpfile
+	   sudo echo " " >> tmpfile
+	   sudo echo "    adminAuth: {" >> tmpfile
+	   sudo echo "        type: \"credentials\"," >> tmpfile
+	   sudo echo "        users: [{" >> tmpfile
+	   sudo echo "            username: \"$adminname\"," >> tmpfile
+	   sudo echo "            password: \"$bcryptadminpass\"," >> tmpfile
+	   sudo echo "            permissions: \"*\"" >> tmpfile
+	   sudo echo "        }]" >> tmpfile
+	   sudo echo "    }," >> tmpfile
+	   sudo echo " " >> tmpfile
+	   sudo echo "    httpNodeAuth: {user:\"$username\", pass:\"$bcryptuserpass\"}" >> tmpfile
+	   sudo echo "}" >> tmpfile
+	   sudo cat tmpfile >> settings.js
+	   sudo rm -f tmpfile
 		if [[ $MYMENU == *"phone"* ]]; then
 			cd && sudo mv /etc/init.d/sendsigs .
 		else
