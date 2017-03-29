@@ -731,7 +731,7 @@ if [[ $MYMENU == *"nodered"* ]]; then
     #sudo npm cache clean
     printstatus "Installing Node-Red"
 	# if nodejs does not exist, abort node-red install
-	if [ -f /usr/bin/nodejs ] || [ -f /usr/local/bin/nodejs ]; then
+	if [ -f /usr/bin/node ] || [ -f /usr/local/bin/node ]; then
 		sudo npm $NQUIET install -g --unsafe-perm node-red
 		if [[ $MYMENU == *"phone"* ]]; then
 			sudo wget -O /etc/init.d/nodered https://gist.githubusercontent.com/bigmonkeyboy/9962293/raw/0fe19671b1aef8e56cbcb20f6677173f8495e539/nodered
