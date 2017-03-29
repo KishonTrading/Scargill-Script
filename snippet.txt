@@ -293,7 +293,7 @@ if [[ $USER != "pi" ]]; then
         getent passwd pi > /dev/null 2&>1
         if [ $? -eq 0 ]; then
             printf "${IRed}!!!! User \"pi\" already exists, logout as root and redo procedure as pi. ${IWhite}\r\n"
-			cp $(readlink -f $0) /home/pi && chown pi.pi /home/pi/$0 && chmod 755 /home/pi/$0
+			cp $(readlink -f $0) /home/pi && chown pi.sudo /home/pi/$0 && chmod 755 /home/pi/$0
         else
             adduser --quiet --disabled-password --shell /bin/bash --home /home/pi --gecos "User" pi
             echo "pi:password" | chpasswd
