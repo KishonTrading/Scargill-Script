@@ -276,6 +276,7 @@ if [[ "$(ping -c 1 8.8.8.8 | grep '100%' )" != "" ]]; then
 fi
  
 DISTRO=$(lsb_release -r|cut -d: -f2|tr -d '[:space:]')
+CHECK64=$(uname -m)
 
 if [[ $OPSYS == *"UBUNTU"* ]]; then
   if [ $DISTRO != "16.04" ] ; then 
@@ -701,10 +702,23 @@ if [[ $MYMENU == *"nodejs"* ]]; then
         cd node-v6.10.1-linux-armv6l
         sudo cp -R * /usr/local/
     else
-        curl -sL https://deb.nodesource.com/setup_6.x > nodesetup.sh
-        sudo bash nodesetup.sh
-        sudo apt-get $AQUIET -y install nodejs
-        [ $? -eq 0 ] && nodejs=1
+	    if [[$CHECK64 == *"aarch64"*]]; then
+
+           printstatus "Installing ARM64 version"
+           wget --no-check-certificate https://nodejs.org/dist/latest-v6.x/node-v6.10.1-linux-arm64.tar.xz
+           [ $? -eq 0 ] && nodejs=1
+           tar -xvf node-v6.10.1-linux-arm64.tar.xz
+           cd node-v6.10.1-linux-arm64
+           sudo cp -R * /usr/local/
+
+		else
+		
+          curl -sL https://deb.nodesource.com/setup_6.x > nodesetup.sh
+          sudo bash nodesetup.sh
+          sudo apt-get $AQUIET -y install nodejs
+          [ $? -eq 0 ] && nodejs=1
+				
+		fi
     fi
     if [ $nodejs -ne 1 ]; then
 		printf "${IRed}!!!! NodeJS not installed! ${IWhite}\r\n"
