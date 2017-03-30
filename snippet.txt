@@ -1,4 +1,3 @@
-
 #!/bin/bash
 
 ## This script was originally developed for the Raspberry Pi. On non-Pi systems such as the
@@ -275,8 +274,9 @@ if [[ "$(ping -c 1 8.8.8.8 | grep '100%' )" != "" ]]; then
   exit 0
 fi
  
-#DISTRO=$(lsb_release -r|cut -d: -f2|tr -d '[:space:]')
-DISTRO=$(lsb_release -rs)
+# install lsb_release on devices without it
+[ ! -x /usr/bin/lsb_release ] && apt-get $AQUIET -y update > /dev/null 2>&1 && apt-get $AQUIET -y install lsb-release > /dev/null 2>&1
+DISTRO=$(/usr/bin/lsb_release -rs)
 CHECK64=$(uname -m)
 
 if [[ $OPSYS == *"UBUNTU"* ]]; then
@@ -287,13 +287,13 @@ if [[ $OPSYS == *"UBUNTU"* ]]; then
 fi
 
 # install sudo on devices without it
-[ ! -x /usr/bin/sudo ] && apt-get $AQUIET -y update > /dev/null 2&>1 && apt-get $AQUIET -y install sudo > /dev/null 2&>1
+[ ! -x /usr/bin/sudo ] && apt-get $AQUIET -y update > /dev/null 2>&1 && apt-get $AQUIET -y install sudo > /dev/null 2>&1
 
 # user pi existance/creation
 if [[ $USER != "pi" ]]; then
     printf "\r\n${IRed}!!!! You MUST be logged in as user 'pi' with sudo privileges to continue. If \"root\", creating \"pi\" now ${IWhite}\r\n"
     if [[ $USER == "root" ]]; then
-        getent passwd pi > /dev/null 2&>1
+        getent passwd pi > /dev/null 2>&1
         if [ $? -eq 0 ]; then
             printf "${IRed}!!!! User \"pi\" already exists, logout as root and redo procedure as pi. ${IWhite}\r\n"
 			cp $(readlink -f $0) /home/pi && chown pi.sudo /home/pi/$0 && chmod 755 /home/pi/$0
@@ -520,13 +520,13 @@ if [[ $MYMENU == *"prereq"* ]]; then
     sudo setcap cap_net_raw=ep /bin/ping
     sudo setcap cap_net_raw=ep /bin/ping6
     # Prerequisite suggested by Julian and adding in python-dev - and stuff I've added for SAMBA and telnet
-    sudo apt-get install $AQUIET -y bash-completion unzip build-essential git python-serial scons libboost-filesystem-dev libboost-program-options-dev libboost-system-dev libsqlite3-dev subversion libcurl4-openssl-dev libusb-dev python-dev cmake curl samba samba-common samba-common-bin winbind telnet usbutils gawk jq
+    sudo apt-get install $AQUIET -y bash-completion unzip build-essential git python-serial scons libboost-filesystem-dev libboost-program-options-dev libboost-system-dev libsqlite3-dev subversion libcurl4-openssl-dev libusb-dev python-dev cmake curl samba samba-common samba-common-bin winbind telnet usbutils gawk jq pv
     # libboost-thread-dev libboost-all-dev
     # This line to ensure name is resolved from hosts FIRST
     sudo sed -i '/\[global\]/a name resolve order = hosts wins bcast' /etc/samba/smb.conf
 fi
 
-if [[ $MYMENU == *"jed"* ]]; then
+if [[ $MYMENU == *"installjed"* ]]; then
     printstatus "Installing JED Editor"
     sudo apt-get $AQUIET -y install jed
 fi
@@ -698,21 +698,22 @@ if [[ $MYMENU == *"nodejs"* ]]; then
     printstatus "Installing NodeJS"
     if [[ $(uname -m) == *"armv6"* ]]; then
         printstatus "Installing ARM6 version"
-        wget --no-check-certificate https://nodejs.org/dist/latest-v6.x/node-v6.10.1-linux-armv64.tar.xz
+        wget --no-check-certificate https://nodejs.org/dist/latest-v6.x/node-v6.10.1-linux-armv6l.tar.xz
         [ $? -eq 0 ] && nodejs=1
-        tar -xvf node-v6.10.1-linux-armv6l.tar.xz
+        pv node-v6.10.1-linux-armv6l.tar.xz | tar -xJf -
         cd node-v6.10.1-linux-armv6l
         sudo cp -R * /usr/local/
+		rm -f node-v6.10.1-linux-armv6l.tar.xz
     else
 	   if [[ $CHECK64 == *"aarch64"* ]]; then
 
            printstatus "Installing ARM64 version"
            wget --no-check-certificate https://nodejs.org/dist/latest-v6.x/node-v6.10.1-linux-arm64.tar.xz
            [ $? -eq 0 ] && nodejs=1
-           tar -xvf node-v6.10.1-linux-arm64.tar.xz
+           pv node-v6.10.1-linux-arm64.tar.xz | tar -xJf -
            cd node-v6.10.1-linux-arm64
            sudo cp -R * /usr/local/
-
+		   rm -f node-v6.10.1-linux-arm64.tar.xz
 		else
 		
           curl -sL https://deb.nodesource.com/setup_6.x > nodesetup.sh
@@ -733,7 +734,7 @@ if [[ $MYMENU == *"nodered"* ]]; then
     printstatus "Installing Node-Red"
 	# if nodejs does not exist, abort node-red install
 	if [ -f /usr/bin/node ] || [ -f /usr/local/bin/node ]; then
-		sudo npm $NQUIET install -g --unsafe-perm node-red
+		sudo npm $NQUIET install -g --unsafe-perm node-red > /dev/null
 		if [[ $MYMENU == *"phone"* ]]; then
 			sudo wget -O /etc/init.d/nodered https://gist.githubusercontent.com/bigmonkeyboy/9962293/raw/0fe19671b1aef8e56cbcb20f6677173f8495e539/nodered
 			sudo chmod 755 /etc/init.d/nodered && sudo update-rc.d nodered defaults
@@ -750,44 +751,44 @@ if [[ $MYMENU == *"nodered"* ]]; then
 	   mkdir .node-red
 	   cd .node-red
 	   printstatus "Installing Nodes"
-	   npm $NQUIET install moment
-	   npm $NQUIET install node-red-contrib-config
-	   npm $NQUIET install node-red-contrib-grove
-	   npm $NQUIET install node-red-contrib-bigtimer
-	   npm $NQUIET install node-red-contrib-esplogin
-	   npm $NQUIET install node-red-contrib-timeout
-	   npm $NQUIET install node-red-node-openweathermap
-	   npm $NQUIET install node-red-node-google
-	   npm $NQUIET install node-red-node-sqlite
-	   npm $NQUIET install node-red-node-emoncms
-	   npm $NQUIET install node-red-node-geofence
-	   npm $NQUIET install node-red-contrib-ivona
-	   npm $NQUIET install node-red-contrib-moment
-	   npm $NQUIET install node-red-contrib-particle
-	   npm $NQUIET install node-red-contrib-web-worldmap
-	   npm $NQUIET install node-red-contrib-graphs
-	   npm $NQUIET install node-red-contrib-isonline
-	   npm $NQUIET install node-red-node-ping
-	   npm $NQUIET install node-red-node-random
-	   npm $NQUIET install node-red-node-smooth
-	   npm $NQUIET install node-red-contrib-npm
-	   npm $NQUIET install node-red-contrib-file-function
-	   npm $NQUIET install node-red-contrib-boolean-logic
-	   npm $NQUIET install node-red-node-arduino
-	   npm $NQUIET install node-red-contrib-blynk-websockets
-	   npm $NQUIET install node-red-dashboard
-	   npm $NQUIET install node-red-node-darksky
-	   npm $NQUIET install node-red-node-serialport
-		npm $NQUIET install node-red-contrib-owntracks
-		npm $NQUIET install node-red-contrib-chatbot
+	   npm $NQUIET install moment > /dev/null
+	   npm $NQUIET install node-red-contrib-config > /dev/null
+	   npm $NQUIET install node-red-contrib-grove > /dev/null
+	   npm $NQUIET install node-red-contrib-bigtimer > /dev/null
+	   npm $NQUIET install node-red-contrib-esplogin > /dev/null
+	   npm $NQUIET install node-red-contrib-timeout > /dev/null
+	   npm $NQUIET install node-red-node-openweathermap > /dev/null
+	   npm $NQUIET install node-red-node-google > /dev/null
+	   npm $NQUIET install node-red-node-sqlite > /dev/null
+	   npm $NQUIET install node-red-node-emoncms > /dev/null
+	   npm $NQUIET install node-red-node-geofence > /dev/null
+	   npm $NQUIET install node-red-contrib-ivona > /dev/null
+	   npm $NQUIET install node-red-contrib-moment > /dev/null
+	   npm $NQUIET install node-red-contrib-particle > /dev/null
+	   npm $NQUIET install node-red-contrib-web-worldmap > /dev/null
+	   npm $NQUIET install node-red-contrib-graphs > /dev/null
+	   npm $NQUIET install node-red-contrib-isonline > /dev/null
+	   npm $NQUIET install node-red-node-ping > /dev/null
+	   npm $NQUIET install node-red-node-random > /dev/null
+	   npm $NQUIET install node-red-node-smooth > /dev/null
+	   npm $NQUIET install node-red-contrib-npm > /dev/null
+	   npm $NQUIET install node-red-contrib-file-function > /dev/null
+	   npm $NQUIET install node-red-contrib-boolean-logic > /dev/null
+	   npm $NQUIET install node-red-node-arduino > /dev/null
+	   npm $NQUIET install node-red-contrib-blynk-websockets > /dev/null
+	   npm $NQUIET install node-red-dashboard > /dev/null
+	   npm $NQUIET install node-red-node-darksky > /dev/null
+	   npm $NQUIET install node-red-node-serialport > /dev/null
+		npm $NQUIET install node-red-contrib-owntracks > /dev/null
+		npm $NQUIET install node-red-contrib-chatbot > /dev/null
 		
-	   sudo npm $NQUIET install bcryptjs
+	   sudo npm $NQUIET install bcryptjs > /dev/null
 	   
 	   if [[ $OPSYS == *"RASPBIAN"* ]]; then
 	       sudo sed -i -e 's#exit 0#chmod 777 /dev/ttyAMA0\nexit 0#g' /etc/rc.local
 	       sudo apt-get -y install python{,3}-rpi.gpio
-	       npm $NQUIET install node-red-contrib-gpio
-	       npm $NQUIET install raspi-io
+	       npm $NQUIET install node-red-contrib-gpio > /dev/null
+	       npm $NQUIET install raspi-io > /dev/null
 	   fi
 	   
 	   cd ~/.node-red/
@@ -975,7 +976,7 @@ fi
 
 if [[ $MYMENU == *"upgradenpm"* ]]; then
     printstatus "Upgrading NPM to the latest version"
-    sudo npm $NQUIET install npm@latest -g
+    sudo npm $NQUIET install npm@latest -g > /dev/null
 fi
 
 
@@ -1007,14 +1008,13 @@ newhostname=$(hostname)
 
 cd
 newhostname=$(whiptail --inputbox "Nearly done. Enter new host name or OK" 8 40 $newhostname 3>&1 1>&2 2>&3)
-echo $newhostname | sudo tee /etc/hostname 2&>1 /dev/null
-sudo sed -i '/^127.0.1.1/ d' /etc/hosts 2&>1 /dev/null
-echo 127.0.1.1 $newhostname | sudo tee -a /etc/hosts 2&>1 /dev/null
-sudo /etc/init.d/hostname.sh 2&>1 /dev/null
+echo $newhostname | sudo tee /etc/hostname > /dev/null 2>&1
+sudo sed -i '/^127.0.1.1/ d' /etc/hosts > /dev/null 2>&1
+echo 127.0.1.1 $newhostname | sudo tee -a /etc/hosts > /dev/null 2>&1
+sudo /etc/init.d/hostname.sh > /dev/null 2>&1
 
 
 printstatus "All done."
 printf 'When you are happy, remove the script from the /home/pi directory.\r\n'
 printf 'Current IP is %s and hostname is %s\r\n' "$myip" "$newhostname"
 printf  "${BIMagenta}**** PLEASE REBOOT NOW ****${IWhite}\r\n"
-
