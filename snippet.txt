@@ -1014,6 +1014,7 @@ sudo /etc/init.d/hostname.sh 2&>1 /dev/null
 
 
 printstatus "All done."
+printf 'When you are happy, remove the script from the /home/pi directory.\r\n'
 printf 'Current IP is %s and hostname is %s\r\n' "$myip" "$newhostname"
 printf  "${BIMagenta}**** PLEASE REBOOT NOW ****${IWhite}\r\n"
 
