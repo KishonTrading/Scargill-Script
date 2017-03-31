@@ -1026,4 +1026,4 @@ sudo /etc/init.d/hostname.sh > /dev/null 2>&1
 printstatus "All done."
 printf 'When you are happy, remove the script from the /home/pi directory.\r\n'
 printf 'Current IP: %s  Hostname: %s\r\n' "$myip" "$thehostname"
-printf  "${BIMagenta}**** ALL DONE - PLEASE REBOOT NOW THEN TEST ****${IWhite}\r\n\r\n"
+printstatus  "ALL DONE - PLEASE REBOOT NOW THEN TEST"
