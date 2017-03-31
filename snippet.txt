@@ -532,11 +532,10 @@ if [[ $MYMENU == *"prereq"* ]]; then
     sudo setcap cap_net_raw=ep /bin/ping
     sudo setcap cap_net_raw=ep /bin/ping6
     # Prerequisite suggested by Julian and adding in python-dev - and stuff I've added for SAMBA and telnet
-    sudo apt-get install $AQUIET -y bash-completion unzip build-essential git python-serial scons libboost-filesystem-dev libboost-program-options-dev libboost-system-dev libsqlite3-dev subversion libcurl4-openssl-dev libusb-dev python-dev cmake curl telnet usbutils gawk jq pv # samba samba-common samba-common-bin winbind
-    #sudo apt-get install $AQUIET -y bash-completion unzip build-essential git python-serial scons libboost-filesystem-dev libboost-program-options-dev libboost-system-dev libsqlite3-dev subversion libcurl4-openssl-dev libusb-dev python-dev cmake curl telnet usbutils gawk jq pv
+    sudo apt-get install $AQUIET -y bash-completion unzip build-essential git python-serial scons libboost-filesystem-dev libboost-program-options-dev libboost-system-dev libsqlite3-dev subversion libcurl4-openssl-dev libusb-dev python-dev cmake curl telnet usbutils gawk jq pv samba samba-common samba-common-bin winbind
     # libboost-thread-dev libboost-all-dev
     # This line to ensure name is resolved from hosts FIRST
-    # sudo sed -i '/\[global\]/a name resolve order = hosts wins bcast' /etc/samba/smb.conf
+    sudo sed -i '/\[global\]/a name resolve order = hosts wins bcast' /etc/samba/smb.conf
 fi
 
 
@@ -743,6 +742,8 @@ if [[ $MYMENU == *"nodered"* ]]; then
     printstatus "Installing Node-Red"
 	# if nodejs does not exist, abort node-red install
 	if [ -f /usr/bin/node ] || [ -f /usr/local/bin/node ]; then
+	   # prevent double additions to settings.js if it exists and is already modified
+	  if [ $(grep public ~/.node-red/settings.js | wc -l) -ne 1 ]; then
 		sudo npm $NQUIET install -g --unsafe-perm node-red > /dev/null
 		if [[ $MYMENU == *"phone"* ]]; then
 			sudo wget -O /etc/init.d/nodered https://gist.githubusercontent.com/bigmonkeyboy/9962293/raw/0fe19671b1aef8e56cbcb20f6677173f8495e539/nodered
@@ -838,6 +839,9 @@ if [[ $MYMENU == *"nodered"* ]]; then
 	   sudo echo "}" >> tmpfile
 	   sudo cat tmpfile >> settings.js
 	   sudo rm -f tmpfile
+	   else
+			printf "${IRed}!!!! Settings.JS already present and modified, skipping! ${IWhite}\r\n"
+	   fi
 		if [[ $MYMENU == *"phone"* ]]; then
 			cd && sudo mv /etc/init.d/sendsigs .
 		else
@@ -1028,4 +1032,3 @@ printstatus "All done."
 printf 'When you are happy, remove the script from the /home/pi directory.\r\n'
 printf 'Current IP: %s  Hostname: %s\r\n' "$myip" "$thehostname"
 printstatus  "ALL DONE - PLEASE REBOOT NOW THEN TEST"
-
