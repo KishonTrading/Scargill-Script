@@ -294,6 +294,17 @@ fi
 # install sudo on devices without it
 [ ! -x /usr/bin/sudo ] && apt-get $AQUIET -y update > /dev/null 2>&1 && apt-get $AQUIET -y install sudo > /dev/null 2>&1
 
+# this block done here, to prevent possible ssh timeouts...
+# Allow remote root login and speed up SSH
+sudo sed -i -e 's/PermitRootLogin no/PermitRootLogin yes/g' /etc/ssh/sshd_config
+sudo sed -i -e 's/PermitRootLogin without-password/PermitRootLogin yes/g' /etc/ssh/sshd_config
+sudo sed -i -e 's/PermitRootLogin prohibit-password/PermitRootLogin yes/g' /etc/ssh/sshd_config
+sudo sed -i -e 's/TCPKeepAlive yes/TCPKeepAlive no/g' /etc/ssh/sshd_config
+sudo sed -i '$ a UseDNS no' /etc/ssh/sshd_config
+sudo sed -i '$ a ClientAliveInterval 30' /etc/ssh/sshd_config
+sudo sed -i '$ a ClientAliveCountMax 100' /etc/ssh/sshd_config
+sudo /etc/init.d/ssh restart
+
 # user pi existance/creation
 if [[ $USER != "pi" ]]; then
     if [[ $USER == "root" ]]; then
@@ -318,17 +329,6 @@ if [[ $USER != "pi" ]]; then
         exit
     fi
 fi
-
-# this block done here, to prevent possible ssh timeouts...
-# Allow remote root login and speed up SSH
-sudo sed -i -e 's/PermitRootLogin no/PermitRootLogin yes/g' /etc/ssh/sshd_config
-sudo sed -i -e 's/PermitRootLogin without-password/PermitRootLogin yes/g' /etc/ssh/sshd_config
-sudo sed -i -e 's/PermitRootLogin prohibit-password/PermitRootLogin yes/g' /etc/ssh/sshd_config
-sudo sed -i -e 's/TCPKeepAlive yes/TCPKeepAlive no/g' /etc/ssh/sshd_config
-sudo sed -i '$ a UseDNS no' /etc/ssh/sshd_config
-sudo sed -i '$ a ClientAliveInterval 30' /etc/ssh/sshd_config
-sudo sed -i '$ a ClientAliveCountMax 100' /etc/ssh/sshd_config
-sudo /etc/init.d/ssh restart
 
 # Whiptail menu may already be installed by default, on the other hand maybe not.
 sudo apt-get $AQUIET -y install whiptail ccze
@@ -427,11 +427,6 @@ fi
 
 cd
 newhostname=$(whiptail --inputbox "Enter new host name or OK" 8 40 $newhostname 3>&1 1>&2 2>&3)
-echo $newhostname | sudo tee /etc/hostname > /dev/null 2>&1
-sudo sed -i '/^127.0.1.1/ d' /etc/hosts > /dev/null 2>&1
-echo 127.0.1.1 $newhostname | sudo tee -a /etc/hosts > /dev/null 2>&1
-sudo /etc/init.d/hostname.sh > /dev/null 2>&1
-
 
 if [[ $MYMENU == *"modpass"* ]]; then
     username=$(whiptail --inputbox "Enter a user name (example user)" 8 40 $username 3>&1 1>&2 2>&3)
@@ -536,7 +531,7 @@ if [[ $MYMENU == *"prereq"* ]]; then
     sudo setcap cap_net_raw=ep /bin/ping
     sudo setcap cap_net_raw=ep /bin/ping6
     # Prerequisite suggested by Julian and adding in python-dev - and stuff I've added for SAMBA and telnet
-    sudo apt-get install $AQUIET -y bash-completion unzip build-essential git python-serial scons libboost-filesystem-dev libboost-program-options-dev libboost-system-dev libsqlite3-dev subversion libcurl4-openssl-dev libusb-dev python-dev cmake curl samba samba-common samba-common-bin winbind telnet usbutils gawk jq pv
+    sudo apt-get install $AQUIET -y bash-completion unzip build-essential git python-serial scons libboost-filesystem-dev libboost-program-options-dev libboost-system-dev libsqlite3-dev subversion libcurl4-openssl-dev libusb-dev python-dev cmake curl telnet usbutils gawk jq pv # samba samba-common samba-common-bin winbind
     # libboost-thread-dev libboost-all-dev
     # This line to ensure name is resolved from hosts FIRST
     sudo sed -i '/\[global\]/a name resolve order = hosts wins bcast' /etc/samba/smb.conf
@@ -1021,6 +1016,10 @@ sudo apt-get $AQUIET -y clean
 
 myip=$(hostname -I)
 thehostname=$(hostname)
+echo $newhostname | sudo tee /etc/hostname > /dev/null 2>&1
+sudo sed -i '/^127.0.1.1/ d' /etc/hosts > /dev/null 2>&1
+echo 127.0.1.1 $newhostname | sudo tee -a /etc/hosts > /dev/null 2>&1
+sudo /etc/init.d/hostname.sh > /dev/null 2>&1
 
 
 printstatus "All done."
