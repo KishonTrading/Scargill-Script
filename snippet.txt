@@ -1,17 +1,19 @@
 #!/bin/bash
 
-## This script was originally developed for the Raspberry Pi. On non-Pi systems such as the
-## FriendlyArm. Don't expect ports to work out of the box on non-Pi systems.
+## This script was originally developed for the Raspberry Pi by Peter Scargill and Aidan Ruff.
+## On non-Pi systems such as the FriendlyArm, don't expect GPIO ports to work out of the box.
 ## Also, for all systems, after you load this script and before running, you need to give
 ## it execute permissions and sure it is saved in Linux
 ## format (carriage returns only) - Notepad++ has this option under edit - eol conversion.
 ##
 ## IMPORTANT:-
-## 1. User PI must be in the SUDO group. Other groups added by the script.
-## 2. When selection GPIO for non-Raspberry Pi devices note - specific support for ODROID C2
+## 1. Run ONLY as ROOT or PI users. If ROOT, PI user will be checked/created for you as the main
+##    script must be run as pi.
+##    User PI must be in the SUDO group. Other groups are added by the script.
+## 2. When selection GPIO for non-Raspberry Pi devices note - specific support for ODROID C2 only
 ## 3. This script could take 3+ hours on a slow Pi Zero Wifi.... steer away from midnight to avoid any updates
 ##    such as dietpi upgrades etc.
-## 4. For NEO (or similar) when asked by Armbian to make a new user - make it user "pi"
+## 4. For NEO (or similar) when asked by Armbian to make a new user - don't bother - script will do it.
 ## 5. For Node-Red on Pi Zero,  if serial port won't connect - look at serial port permissions in /dev/
 ## 6. Do not access this script as SUDO.
 ##
@@ -174,7 +176,7 @@ task_start(){
     skip=0
     printf "\n${BIGreen}%*s${BIWhite}\n" $columns | tr ' ' -
     elapsedTime="$(($(date +%s)-startTime))"
-    printf "Elapsed Time: %02d hrs %02d mins %02d secs\n" "$((elapsedTime/3600%24))" "$((elapsedTime/60%60))" "$((elapsedTime%60))"
+    printf "Elapsed: %02d hrs %02d mins %02d secs\n" "$((elapsedTime/3600%24))" "$((elapsedTime/60%60))" "$((elapsedTime%60))"
     clean_stdin
     if [ "$user_response" != "a" ]; then
         timecount
@@ -257,7 +259,8 @@ printstatus() {
     h=$(($SECONDS/3600));
     m=$((($SECONDS/60)%60));
     s=$(($SECONDS%60));
-    printf "\r\n${BIGreen}  ====\r\n  ==== ${BIYellow}$1 - ${BIGreen}Total: %02dh:%02dm:%02ds Cores/Temp $ACTIVECORES - $CPU_TEMP_PRINT \r\n${BIGreen}  ====${BIWhite}\r\n"  $h $m $s;
+    printf "\r\n${BIGreen}==\r\n== ${BIYellow}$1"
+    printf "\r\n${BIGreen}== ${IBlue}Total: %02dh:%02dm:%02ds Cores: $ACTIVECORES Temperature: $CPU_TEMP_PRINT \r\n${BIGreen}==${IWhite}\r\n\r\n"  $h $m $s;
 }
 
 
@@ -267,6 +270,8 @@ printstatus() {
 ##
 #############################################################################
 ##
+
+printstatus "Welcome to the script. Grabbing some preliminaries..."
 
 # test internet connection
 if [[ "$(ping -c 1 8.8.8.8 | grep '100%' )" != "" ]]; then
@@ -291,11 +296,11 @@ fi
 
 # user pi existance/creation
 if [[ $USER != "pi" ]]; then
-    printf "\r\n${IRed}!!!! You MUST be logged in as user 'pi' with sudo privileges to continue. If \"root\", creating \"pi\" now ${IWhite}\r\n"
     if [[ $USER == "root" ]]; then
+        printf "\r\n${ICyan}Hello ROOT... ${IWhite}"
         getent passwd pi > /dev/null 2>&1
         if [ $? -eq 0 ]; then
-            printf "${IRed}!!!! User \"pi\" already exists, logout as root and redo procedure as pi. ${IWhite}\r\n"
+            printf "${ICyan}user \"pi\" exists, please log-out as root and run script as pi.${IWhite}\r\n\r\n"
 			cp $(readlink -f $0) /home/pi && chown pi.sudo /home/pi/$0 && chmod 755 /home/pi/$0
         else
             adduser --quiet --disabled-password --shell /bin/bash --home /home/pi --gecos "User" pi
@@ -304,11 +309,12 @@ if [[ $USER != "pi" ]]; then
             echo "pi ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/pi
             chmod 0440 /etc/sudoers.d/pi
             chmod 4755 /usr/bin/sudo # bug of dietpi 145, solved in future 146: https://github.com/Fourdee/DietPi/issues/794
-            printf "${IRed}!!!! User PI created, password is \"password\". Logout as root and login as pi, and redo the procedure ${IWhite}\r\n"
+            printf "${ICyan}user PI created, password is \"password\". Please log-out as root and login as pi, and redo the procedure ${IWhite}\r\n\r\n"
 			cp $(readlink -f $0) /home/pi && chown pi.pi /home/pi/$0 && chmod 755 /home/pi/$0
         fi
         exit
     else
+        printstatus "Leaving script as you are neither PI nor ROOT user."
         exit
     fi
 fi
@@ -350,6 +356,8 @@ userpass="password123"
 
 adminname="admin"
 adminpass="password123"
+
+newhostname="myboard"
 
 SECONDS=0
 
@@ -534,10 +542,6 @@ if [[ $MYMENU == *"prereq"* ]]; then
     sudo sed -i '/\[global\]/a name resolve order = hosts wins bcast' /etc/samba/smb.conf
 fi
 
-if [[ $MYMENU == *"installjed"* ]]; then
-    printstatus "Installing JED Editor"
-    sudo apt-get $AQUIET -y install jed
-fi
 
 if [[ $MYMENU == *"mosquitto"* ]]; then
     printstatus "Installing Mosquitto with Websockets"
@@ -758,7 +762,7 @@ if [[ $MYMENU == *"nodered"* ]]; then
 	   cd
 	   mkdir .node-red
 	   cd .node-red
-	   printstatus "Installing Nodes"
+	   printstatus "Installing Nodes (could take some time)"
 	   npm $NQUIET install moment > /dev/null
 	   npm $NQUIET install node-red-contrib-config > /dev/null
 	   npm $NQUIET install node-red-contrib-grove > /dev/null
@@ -871,7 +875,7 @@ fi
 
 
 if [[ $MYMENU == *"webmin"* ]]; then
-    printstatus "Installing Webmin at port 10000 - could take some time"
+    printstatus "Installing Webmin at port 10000 (could take some time)"
     #cd
     #mkdir webmin
     #cd webmin
@@ -1001,6 +1005,10 @@ if [[ $MYMENU == *"installmc"* ]]; then
     sudo apt-get -y $AQUIET install mc
 fi
 
+if [[ $MYMENU == *"installjed"* ]]; then
+    printstatus "Installing JED Editor"
+    sudo apt-get $AQUIET -y install jed
+fi
 
 # Drop in an index file and css for a menu page
 if [[ $MYMENU == *"addindex"* ]]; then
@@ -1012,10 +1020,10 @@ fi
 sudo apt-get $AQUIET -y clean
 
 myip=$(hostname -I)
-newhostname=$(hostname)
+thehostname=$(hostname)
 
 
 printstatus "All done."
 printf 'When you are happy, remove the script from the /home/pi directory.\r\n'
-printf 'Current IP is %s and hostname is %s\r\n' "$myip" "$newhostname"
-printf  "${BIMagenta}**** PLEASE REBOOT NOW ****${IWhite}\r\n"
+printf 'Current IP: %s  Hostname: %s\r\n' "$myip" "$thehostname"
+printf  "${BIMagenta}**** ALL DONE - PLEASE REBOOT NOW THEN TEST ****${IWhite}\r\n\r\n"
