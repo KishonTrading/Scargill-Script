@@ -842,11 +842,12 @@ if [[ $MYMENU == *"nodered"* ]]; then
 	   else
 			printf "${IRed}!!!! Settings.JS already present and modified, skipping! ${IWhite}\r\n"
 	   fi
-		if [[ $MYMENU == *"phone"* ]]; then
+	   sed -i -e 's#\/\/\s*var fs#var fs#' /home/pi/.node-red/settings.js
+	   if [[ $MYMENU == *"phone"* ]]; then
 			cd && sudo mv /etc/init.d/sendsigs .
-		else
+	   else
 			sudo systemctl enable nodered.service
-		fi
+	   fi
 	else
 		printf "${IRed}!!!! Node-Red not installed! ${IWhite}\r\n"
 	fi
