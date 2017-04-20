@@ -276,7 +276,7 @@ printstatus() {
 printstatus "Welcome to the script. Grabbing some preliminaries..."
 
 # test internet connection
-if [[ "$(ping -c 1 8.8.8.8 | grep '100%' )" != "" ]]; then
+if [[ "$(ping -c 1 23.1.68.60  | grep '100%' )" != "" ]]; then
   printf "${IRed}!!!! No internet connection available, aborting! ${IWhite}\r\n"
   exit 0
 fi
