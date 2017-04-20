@@ -6,6 +6,8 @@
 ## it execute permissions and sure it is saved in Linux
 ## format (carriage returns only) - Notepad++ has this option under edit - eol conversion.
 ##
+## One way to grab this script is:  wget https://bitbucket.org/api/2.0/snippets/scargill/oAkRK/master/files/snippet.txt
+##
 ## IMPORTANT:-
 ## 1. Run ONLY as ROOT or PI users. If ROOT, PI user will be checked/created for you as the main
 ##    script must be run as pi.
