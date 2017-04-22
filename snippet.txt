@@ -230,28 +230,28 @@ aFP_TEMPERATURE=(
 Obtain_Cpu_Temp(){
     for ((i=0; i<${#aFP_TEMPERATURE[@]}; i++))
     do
-            if [ -f "${aFP_TEMPERATURE[$i]}" ]; then
-                    CPU_TEMP_CURRENT=$(cat "${aFP_TEMPERATURE[$i]}")
-                    # - Some devices (pine) provide 2 digit output, some provide a 5 digit ouput.
-                    #       So, If the value is over 1000, we can assume it needs converting to 1'c
-                    if (( $CPU_TEMP_CURRENT >= 1000 )); then
-                            CPU_TEMP_CURRENT=$( echo -e "$CPU_TEMP_CURRENT" | awk '{print $1/1000}' | xargs printf "%0.0f" )
-                    fi
-                    if (( $CPU_TEMP_CURRENT >= 70 )); then
-                            CPU_TEMP_PRINT="\e[91mWarning: $CPU_TEMP_CURRENT'c\e[0m"
-                    elif (( $CPU_TEMP_CURRENT >= 60 )); then
-                            CPU_TEMP_PRINT="\e[38;5;202m$CPU_TEMP_CURRENT'c\e[0m"
-                    elif (( $CPU_TEMP_CURRENT >= 50 )); then
-                            CPU_TEMP_PRINT="\e[93m$CPU_TEMP_CURRENT'c\e[0m"
-                    elif (( $CPU_TEMP_CURRENT >= 40 )); then
-                            CPU_TEMP_PRINT="\e[92m$CPU_TEMP_CURRENT'c\e[0m"
-                    elif (( $CPU_TEMP_CURRENT >= 30 )); then
-                            CPU_TEMP_PRINT="\e[96m$CPU_TEMP_CURRENT'c\e[0m"
-                    else
-                            CPU_TEMP_PRINT="\e[96m$CPU_TEMP_CURRENT'c\e[0m"
-                    fi
-                    break
+        if [ -f "${aFP_TEMPERATURE[$i]}" ]; then
+            CPU_TEMP_CURRENT=$(cat "${aFP_TEMPERATURE[$i]}")
+            # - Some devices (pine) provide 2 digit output, some provide a 5 digit ouput.
+            #       So, If the value is over 1000, we can assume it needs converting to 1'c
+            if (( $CPU_TEMP_CURRENT >= 1000 )); then
+                CPU_TEMP_CURRENT=$( echo -e "$CPU_TEMP_CURRENT" | awk '{print $1/1000}' | xargs printf "%0.0f" )
             fi
+            if (( $CPU_TEMP_CURRENT >= 70 )); then
+                CPU_TEMP_PRINT="\e[91mWarning: $CPU_TEMP_CURRENT'c\e[0m"
+                elif (( $CPU_TEMP_CURRENT >= 60 )); then
+                CPU_TEMP_PRINT="\e[38;5;202m$CPU_TEMP_CURRENT'c\e[0m"
+                elif (( $CPU_TEMP_CURRENT >= 50 )); then
+                CPU_TEMP_PRINT="\e[93m$CPU_TEMP_CURRENT'c\e[0m"
+                elif (( $CPU_TEMP_CURRENT >= 40 )); then
+                CPU_TEMP_PRINT="\e[92m$CPU_TEMP_CURRENT'c\e[0m"
+                elif (( $CPU_TEMP_CURRENT >= 30 )); then
+                CPU_TEMP_PRINT="\e[96m$CPU_TEMP_CURRENT'c\e[0m"
+            else
+                CPU_TEMP_PRINT="\e[96m$CPU_TEMP_CURRENT'c\e[0m"
+            fi
+            break
+        fi
     done
 }
 
@@ -277,20 +277,20 @@ printstatus "Welcome to the script. Grabbing some preliminaries..."
 
 # test internet connection
 if [[ "$(ping -c 1 23.1.68.60  | grep '100%' )" != "" ]]; then
-  printf "${IRed}!!!! No internet connection available, aborting! ${IWhite}\r\n"
-  exit 0
+    printf "${IRed}!!!! No internet connection available, aborting! ${IWhite}\r\n"
+    exit 0
 fi
- 
+
 # install lsb_release on devices without it
 [ ! -x /usr/bin/lsb_release ] && apt-get $AQUIET -y update > /dev/null 2>&1 && apt-get $AQUIET -y install lsb-release > /dev/null 2>&1
 DISTRO=$(/usr/bin/lsb_release -rs)
 CHECK64=$(uname -m)
 
 if [[ $OPSYS == *"UBUNTU"* ]]; then
-  if [ $DISTRO != "16.04" ] ; then 
-      printf "${IRed}!!!! Wrong version of Ubuntu - not 16.04, aborting! ${IWhite}\r\n"
-      exit 0
-  fi
+    if [ $DISTRO != "16.04" ] ; then
+        printf "${IRed}!!!! Wrong version of Ubuntu - not 16.04, aborting! ${IWhite}\r\n"
+        exit 0
+    fi
 fi
 
 # install sudo on devices without it
@@ -314,7 +314,7 @@ if [[ $USER != "pi" ]]; then
         getent passwd pi > /dev/null 2>&1
         if [ $? -eq 0 ]; then
             printf "${ICyan}user \"pi\" exists, please log-out as root and run script as pi.${IWhite}\r\n\r\n"
-			cp $(readlink -f $0) /home/pi && chown pi.sudo /home/pi/$0 && chmod 755 /home/pi/$0
+            cp $(readlink -f $0) /home/pi && chown pi.sudo /home/pi/$0 && chmod 755 /home/pi/$0
         else
             adduser --quiet --disabled-password --shell /bin/bash --home /home/pi --gecos "User" pi
             echo "pi:password" | chpasswd
@@ -323,7 +323,7 @@ if [[ $USER != "pi" ]]; then
             chmod 0440 /etc/sudoers.d/pi
             chmod 4755 /usr/bin/sudo # bug of dietpi 145, solved in future 146: https://github.com/Fourdee/DietPi/issues/794
             printf "${ICyan}user PI created, password is \"password\". Please log-out as root and login as pi, and redo the procedure ${IWhite}\r\n\r\n"
-			cp $(readlink -f $0) /home/pi && chown pi.pi /home/pi/$0 && chmod 755 /home/pi/$0
+            cp $(readlink -f $0) /home/pi && chown pi.pi /home/pi/$0 && chmod 755 /home/pi/$0
         fi
         exit
     else
@@ -388,7 +388,7 @@ if [[ $OPSYS == *"RASPBIAN"* ]];then
         "installjed" "Install JED file editor" OFF \
         "habridge" "Install HA-bridge on port 82" OFF \
         "wolfram" "Remove Wolfram on a PI to save space" OFF \
-        "office" "Remove LibreOffice on PI to save space" OFF 3>&1 1>&2 2>&3)
+    "office" "Remove LibreOffice on PI to save space" OFF 3>&1 1>&2 2>&3)
 else
     MYMENU=$(whiptail --title "Main Non-Pi Selection" --checklist \
         "\nSelect items as required then hit OK" 30 74 23 \
@@ -414,7 +414,7 @@ else
         "installcu" "Install CU for serial VT100 Terminal" ON \
         "installmc" "Install MC+MCEDIT file manager + editor" ON \
         "installjed" "Install JED file editor" OFF \
-        "habridge" "Install HA-bridge on port 82" OFF 3>&1 1>&2 2>&3)
+    "habridge" "Install HA-bridge on port 82" OFF 3>&1 1>&2 2>&3)
 fi
 
 if [[ $MYMENU == *"quiet"* ]]; then
@@ -502,16 +502,16 @@ if [[ $MYMENU == *"phone"* ]]; then
     echo "en_US.UTF-8 UTF-8" | sudo tee -a /etc/locale.gen > /dev/null
     # echo "service rsyslog stop" | sudo tee -a /etc/init.d/rc.local > /dev/null
     sudo update-rc.d rsyslog disable
- 	sudo locale-gen
+    sudo locale-gen
     sudo sed -i -e 's#exit 0##g' /etc/rc.local
     echo "cd /home/pi/habridge" | sudo tee -a /etc/rc.local > /dev/null
-	echo "[ -f /home/pi/habridge/habridge-log.txt ] && rm /home/pi/habridge/habridge-log.txt" | sudo tee -a /etc/rc.local > /dev/null
+    echo "[ -f /home/pi/habridge/habridge-log.txt ] && rm /home/pi/habridge/habridge-log.txt" | sudo tee -a /etc/rc.local > /dev/null
     echo "nohup /usr/bin/java -jar -Dserver.port=82 -Dconfig.file=/home/pi/habridge/data/habridge.config /home/pi/habridge/ha-bridge.jar > /home/pi/habridge/habridge-log.txt 2>&1 &" | sudo tee -a /etc/rc.local > /dev/null
-	echo "chmod 777 /home/pi/habridge/habridge-log.txt" | sudo tee -a /etc/rc.local > /dev/null
+    echo "chmod 777 /home/pi/habridge/habridge-log.txt" | sudo tee -a /etc/rc.local > /dev/null
     echo "exit 0" | sudo tee -a /etc/rc.local > /dev/null
 else
     sudo apt-get install avahi-daemon avahi-utils -y
-    sudo sed -i -e 's/use-ipv6=yes/use-ipv6=no/g' /etc/avahi/avahi-daemon.conf 
+    sudo sed -i -e 's/use-ipv6=yes/use-ipv6=no/g' /etc/avahi/avahi-daemon.conf
 fi
 
 if [[ $MYMENU == *"wolfram"* ]]; then
@@ -546,36 +546,36 @@ if [[ $MYMENU == *"mosquitto"* ]]; then
     cd
     if [[ $OPSYS == *"UBUNTU"* ]]; then
         sudo apt-get $AQUIET -y install mosquitto mosquitto-clients
-		[ $? -eq 0 ] && mosquitto=1 # mosquitto installed
+        [ $? -eq 0 ] && mosquitto=1 # mosquitto installed
     else
         wget http://repo.mosquitto.org/debian/mosquitto-repo.gpg.key -O - | sudo apt-key add -
         if [ $? -eq 0 ]; then
-	       echo "deb http://repo.mosquitto.org/debian jessie main" |sudo tee /etc/apt/sources.list.d/mosquitto-jessie.list
-    	   sudo apt-get $AQUIET -y update && sudo apt-get $AQUIET -y install mosquitto mosquitto-clients
-			[ $? -eq 0 ] && mosquitto=1 # mosquitto installed
-		fi
+            echo "deb http://repo.mosquitto.org/debian jessie main" |sudo tee /etc/apt/sources.list.d/mosquitto-jessie.list
+            sudo apt-get $AQUIET -y update && sudo apt-get $AQUIET -y install mosquitto mosquitto-clients
+            [ $? -eq 0 ] && mosquitto=1 # mosquitto installed
+        fi
     fi
-	# add mosquitto mods+pass ONLY if it was installed...
+    # add mosquitto mods+pass ONLY if it was installed...
     if [ $mosquitto -eq 1 ]; then
-    	sudo bash -c "echo -e \"listener 9001\nprotocol websockets\nlistener 1883\nallow_anonymous false\npassword_file /etc/mosquitto/passwords\" > /etc/mosquitto/conf.d/websockets.conf"
-    	sudo touch /etc/mosquitto/passwords
-    	sudo mosquitto_passwd  -b /etc/mosquitto/passwords $adminname $adminpass
-	else
-		printf "${IRed}!!!! Mosquitto not installed! ${IWhite}\r\n"
-	fi
+        sudo bash -c "echo -e \"listener 9001\nprotocol websockets\nlistener 1883\nallow_anonymous false\npassword_file /etc/mosquitto/passwords\" > /etc/mosquitto/conf.d/websockets.conf"
+        sudo touch /etc/mosquitto/passwords
+        sudo mosquitto_passwd  -b /etc/mosquitto/passwords $adminname $adminpass
+    else
+        printf "${IRed}!!!! Mosquitto not installed! ${IWhite}\r\n"
+    fi
 fi
 
 if [[ $MYMENU == *"wiringpi"* ]]; then
     cd
     git clone git://git.drogon.net/wiringPi
-	# if git fails or folder does not exist, abort+report
-	if [ $? -eq 0 ] && [ -d wiringPi ]; then
-		cd ~/wiringPi
-		./build
-	else
-		printf "${IRed}!!!! Wiringpi not installed! ${IWhite}\r\n"
-	fi
-
+    # if git fails or folder does not exist, abort+report
+    if [ $? -eq 0 ] && [ -d wiringPi ]; then
+        cd ~/wiringPi
+        ./build
+    else
+        printf "${IRed}!!!! Wiringpi not installed! ${IWhite}\r\n"
+    fi
+    
 fi
 
 # Moved sqlite3 so that node-red sql node will install
@@ -589,37 +589,37 @@ if [[ $MYMENU == *"apache"* ]]; then
     
     if [[ $OPSYS != *"UBUNTU"* ]]; then
         sudo apt-get $AQUIET -y install apache2 libapache2-mod-php5 sqlite3 php5-sqlite
-		[ $? -eq 0 ] && apache=1 # apache installed
+        [ $? -eq 0 ] && apache=1 # apache installed
     else
         sudo apt-get $AQUIET -y install apache2 libapache2-mod-php7.0 sqlite3 php-sqlite3 php-xml php-mbstring
-		[ $? -eq 0 ] && apache=1 # apache installed
+        [ $? -eq 0 ] && apache=1 # apache installed
     fi
-	# if apache installed and /var/www/html exists, go on...
-	if [ $apache -eq 1 ] && [ -d /var/www/html ]; then
-		cd /var/www/html
-		sudo mkdir phpliteadmin
-		cd phpliteadmin
-		sudo wget --no-verbose --no-check-certificate http://bitbucket.org/phpliteadmin/public/downloads/phpLiteAdmin_v1-9-7-1.zip
+    # if apache installed and /var/www/html exists, go on...
+    if [ $apache -eq 1 ] && [ -d /var/www/html ]; then
+        cd /var/www/html
+        sudo mkdir phpliteadmin
+        cd phpliteadmin
+        sudo wget --no-verbose --no-check-certificate http://bitbucket.org/phpliteadmin/public/downloads/phpLiteAdmin_v1-9-7-1.zip
         if [ $? -eq 0 ]; then
-			sudo unzip phpLiteAdmin_v1-9-7-1.zip
-			sudo mv phpliteadmin.php index.php
-			sudo mv phpliteadmin.config.sample.php phpliteadmin.config.php
-			sudo rm *.zip
-			sudo mkdir themes
-			cd themes
-			sudo wget --no-verbose --no-check-certificate http://bitbucket.org/phpliteadmin/public/downloads/phpliteadmin_themes_2013-12-26.zip
-			sudo unzip phpliteadmin_themes_2013-12-26.zip
-			sudo rm *.zip
-			sudo sed -i -e 's#\$directory = \x27.\x27;#\$directory = \x27/home/pi/dbs/\x27;#g' /var/www/html/phpliteadmin/phpliteadmin.config.php
-			sudo sed -i -e "s#\$password = \x27admin\x27;#\$password = \x27$adminpass\x27;#g" /var/www/html/phpliteadmin/phpliteadmin.config.php
-			sudo sed -i -e "s#\$subdirectories = false;#\$subdirectories = true;#g" /var/www/html/phpliteadmin/phpliteadmin.config.php
-			cd
-		else
-			printf "${IRed}!!!! PHPLITEADMIN not installed! ${IWhite}\r\n"
-			cd ; rm -rf /var/www/html/phpliteadmin
-		fi
-		
-		mkdir dbs
+            sudo unzip phpLiteAdmin_v1-9-7-1.zip
+            sudo mv phpliteadmin.php index.php
+            sudo mv phpliteadmin.config.sample.php phpliteadmin.config.php
+            sudo rm *.zip
+            sudo mkdir themes
+            cd themes
+            sudo wget --no-verbose --no-check-certificate http://bitbucket.org/phpliteadmin/public/downloads/phpliteadmin_themes_2013-12-26.zip
+            sudo unzip phpliteadmin_themes_2013-12-26.zip
+            sudo rm *.zip
+            sudo sed -i -e 's#\$directory = \x27.\x27;#\$directory = \x27/home/pi/dbs/\x27;#g' /var/www/html/phpliteadmin/phpliteadmin.config.php
+            sudo sed -i -e "s#\$password = \x27admin\x27;#\$password = \x27$adminpass\x27;#g" /var/www/html/phpliteadmin/phpliteadmin.config.php
+            sudo sed -i -e "s#\$subdirectories = false;#\$subdirectories = true;#g" /var/www/html/phpliteadmin/phpliteadmin.config.php
+            cd
+        else
+            printf "${IRed}!!!! PHPLITEADMIN not installed! ${IWhite}\r\n"
+            cd ; rm -rf /var/www/html/phpliteadmin
+        fi
+        
+        mkdir dbs
 		sqlite3 /home/pi/dbs/iot.db << EOF
 		CREATE TABLE IF NOT EXISTS \`pinDescription\` (
 		 \`pinID\` INTEGER PRIMARY KEY NOT NULL,
@@ -693,14 +693,14 @@ if [[ $MYMENU == *"apache"* ]]; then
 		 \`timestamp\` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP , FOREIGN KEY(DataID, DeviceID ) REFERENCES DeviceData(DAtaID, DeviceID )
 		);
 EOF
-    
-		cd
-		chmod 777 /home/pi/dbs
-		chmod 666 /home/pi/dbs/iot.db
-		cd
-	else
-		printf "${IRed}!!!! Apache+PHP+SQLITE+PHPLITEADMIN NOT INSTALLED! ${IWhite}\r\n"
-	fi
+        
+        cd
+        chmod 777 /home/pi/dbs
+        chmod 666 /home/pi/dbs/iot.db
+        cd
+    else
+        printf "${IRed}!!!! Apache+PHP+SQLITE+PHPLITEADMIN NOT INSTALLED! ${IWhite}\r\n"
+    fi
 fi
 
 
@@ -713,148 +713,148 @@ if [[ $MYMENU == *"nodejs"* ]]; then
         pv node-v6.10.1-linux-armv6l.tar.xz | tar -xJf -
         cd node-v6.10.1-linux-armv6l
         sudo cp -R * /usr/local/
-		rm -f node-v6.10.1-linux-armv6l.tar.xz
+        rm -f node-v6.10.1-linux-armv6l.tar.xz
     else
-	   if [[ $CHECK64 == *"aarch64"* ]]; then
-
-           printstatus "Installing ARM64 version"
-           wget --no-check-certificate https://nodejs.org/dist/latest-v6.x/node-v6.10.1-linux-arm64.tar.xz
-           [ $? -eq 0 ] && nodejs=1
-           pv node-v6.10.1-linux-arm64.tar.xz | tar -xJf -
-           cd node-v6.10.1-linux-arm64
-           sudo cp -R * /usr/local/
-		   rm -f node-v6.10.1-linux-arm64.tar.xz
-		else
-		
-          curl -sL https://deb.nodesource.com/setup_6.x > nodesetup.sh
-          sudo bash nodesetup.sh
-          sudo apt-get $AQUIET -y install nodejs
-          [ $? -eq 0 ] && nodejs=1
-				
-		fi
+        if [[ $CHECK64 == *"aarch64"* ]]; then
+            
+            printstatus "Installing ARM64 version"
+            wget --no-check-certificate https://nodejs.org/dist/latest-v6.x/node-v6.10.1-linux-arm64.tar.xz
+            [ $? -eq 0 ] && nodejs=1
+            pv node-v6.10.1-linux-arm64.tar.xz | tar -xJf -
+            cd node-v6.10.1-linux-arm64
+            sudo cp -R * /usr/local/
+            rm -f node-v6.10.1-linux-arm64.tar.xz
+        else
+            
+            curl -sL https://deb.nodesource.com/setup_6.x > nodesetup.sh
+            sudo bash nodesetup.sh
+            sudo apt-get $AQUIET -y install nodejs
+            [ $? -eq 0 ] && nodejs=1
+            
+        fi
     fi
     if [ $nodejs -ne 1 ]; then
-		printf "${IRed}!!!! NodeJS not installed! ${IWhite}\r\n"
-	fi
+        printf "${IRed}!!!! NodeJS not installed! ${IWhite}\r\n"
+    fi
 fi
 
 
 if [[ $MYMENU == *"nodered"* ]]; then
     #sudo npm cache clean
     printstatus "Installing Node-Red"
-	# if nodejs does not exist, abort node-red install
-	if [ -f /usr/bin/node ] || [ -f /usr/local/bin/node ]; then
-	   # prevent double additions to settings.js if it exists and is already modified
-	  if [ $(grep public ~/.node-red/settings.js 2> /dev/null | wc -l) -ne 1 ]; then
-		sudo npm $NQUIET install -g --unsafe-perm node-red > /dev/null
-		if [[ $MYMENU == *"phone"* ]]; then
-			sudo wget -O /etc/init.d/nodered https://gist.githubusercontent.com/bigmonkeyboy/9962293/raw/0fe19671b1aef8e56cbcb20f6677173f8495e539/nodered
-			sudo chmod 755 /etc/init.d/nodered && sudo update-rc.d nodered defaults
-		else
-            echo | openssl s_client -showcerts -servername raw.githubusercontent.com -connect raw.githubusercontent.com:443 2>/dev/null | openssl x509 -inform pem -noout -text > /dev/null 2>&1	
-		    [[ $? -ne 0 ]] && echo 151.101.128.133 raw.githubusercontent.com | sudo tee -a /etc/hosts
-			sudo wget --no-check-certificate https://raw.githubusercontent.com/node-red/raspbian-deb-package/master/resources/nodered.service -O /lib/systemd/system/nodered.service
-			sudo wget --no-check-certificate https://raw.githubusercontent.com/node-red/raspbian-deb-package/master/resources/node-red-start -O /usr/bin/node-red-start
-			sudo wget --no-check-certificate https://raw.githubusercontent.com/node-red/raspbian-deb-package/master/resources/node-red-stop -O /usr/bin/node-red-stop
-			#sudo sed -i -e 's#=pi#=%USER#g' /lib/systemd/system/nodered.service
-			sudo chmod +x /usr/bin/node-red-st*
-			sudo systemctl daemon-reload
-		fi
-
-	   cd
-	   mkdir .node-red
-	   cd .node-red
-	   printstatus "Installing Nodes (could take some time)"
-	   npm $NQUIET install moment > /dev/null
-	   npm $NQUIET install node-red-contrib-config > /dev/null
-	   npm $NQUIET install node-red-contrib-grove > /dev/null
-	   npm $NQUIET install node-red-contrib-bigtimer > /dev/null
-	   npm $NQUIET install node-red-contrib-esplogin > /dev/null
-	   npm $NQUIET install node-red-contrib-timeout > /dev/null
-	   npm $NQUIET install node-red-node-openweathermap > /dev/null
-	   npm $NQUIET install node-red-node-google > /dev/null
-	   npm $NQUIET install node-red-node-sqlite > /dev/null
-	   npm $NQUIET install node-red-node-emoncms > /dev/null
-	   npm $NQUIET install node-red-node-geofence > /dev/null
-	   npm $NQUIET install node-red-contrib-ivona > /dev/null
-	   npm $NQUIET install node-red-contrib-moment > /dev/null
-	   npm $NQUIET install node-red-contrib-particle > /dev/null
-	   npm $NQUIET install node-red-contrib-web-worldmap > /dev/null
-	   npm $NQUIET install node-red-contrib-graphs > /dev/null
-	   npm $NQUIET install node-red-contrib-isonline > /dev/null
-	   npm $NQUIET install node-red-node-ping > /dev/null
-	   npm $NQUIET install node-red-node-random > /dev/null
-	   npm $NQUIET install node-red-node-smooth > /dev/null
-	   npm $NQUIET install node-red-contrib-npm > /dev/null
-	   npm $NQUIET install node-red-contrib-file-function > /dev/null
-	   npm $NQUIET install node-red-contrib-boolean-logic > /dev/null
-	   npm $NQUIET install node-red-node-arduino > /dev/null
-	   npm $NQUIET install node-red-contrib-blynk-websockets > /dev/null
-	   npm $NQUIET install node-red-dashboard > /dev/null
-	   npm $NQUIET install node-red-node-darksky > /dev/null
-	   npm $NQUIET install node-red-node-serialport > /dev/null
-		npm $NQUIET install node-red-contrib-owntracks > /dev/null
-		npm $NQUIET install node-red-contrib-chatbot > /dev/null
-		
-	   sudo npm $NQUIET install bcryptjs > /dev/null
-	   
-	   if [[ $OPSYS == *"RASPBIAN"* ]]; then
-	       sudo sed -i -e 's#exit 0#chmod 777 /dev/ttyAMA0\nexit 0#g' /etc/rc.local
-	       sudo apt-get -y install python{,3}-rpi.gpio
-	       npm $NQUIET install node-red-contrib-gpio > /dev/null
-	       npm $NQUIET install raspi-io > /dev/null
-	   fi
-	   
-	   cd ~/.node-red/
-	   sudo service nodered start ; while [ ! -f settings.js ] ; do sudo sleep 1 ; done ; sudo service nodered stop;
-	   echo " "
-	   bcryptadminpass=$(node -e "console.log(require('bcryptjs').hashSync(process.argv[1], 8));" $adminpass)
-	   bcryptuserpass=$(node -e "console.log(require('bcryptjs').hashSync(process.argv[1], 8));" $userpass)
-	   # echo Encrypted password: $bcryptpass
-	   cp settings.js settings.js.bak-pre-crypt
-		
-		datetimestamp=`date +%Y-%m-%d_%Hh%Mm`
-		cd ~/.node-red
-		# this will add the TOP piece of code for non-vol variables in settings.js
-		gawk -i inplace -v INPLACE_SUFFIX=-$datetimestamp '!found && /module.exports/ { print " var mySettings;\n try {\n mySettings = require(\"/home/pi/.node-red/redvars.js\");\n } catch(err) {\n mySettings = {};\n }\n"; found=1 } 1' settings.js
-		
-	   sudo sed -i -e 's#functionGlobalContext: {#\/\/ functionGlobalContext: {#g' settings.js
-	   sudo sed -i -e 's#\s\s\s\s\},#    \/\/ },#g' settings.js
-	   sudo sed -i -e 's#^\}#,#g' settings.js
-	   sudo echo " " > tmpfile
-	   sudo echo "    httpStatic: '/home/pi/.node-red/public'," >> tmpfile
-	   sudo echo "    functionGlobalContext: {" >> tmpfile
-	   sudo echo "        os:require('os')," >> tmpfile
-	   sudo echo "        moment:require('moment'), " >> tmpfile
-	   sudo echo "        fs:require('fs'), " >> tmpfile
-	   sudo echo "        mySettings:mySettings " >> tmpfile
-	   sudo echo "    }," >> tmpfile
-	   sudo echo " " >> tmpfile
-	   sudo echo "    adminAuth: {" >> tmpfile
-	   sudo echo "        type: \"credentials\"," >> tmpfile
-	   sudo echo "        users: [{" >> tmpfile
-	   sudo echo "            username: \"$adminname\"," >> tmpfile
-	   sudo echo "            password: \"$bcryptadminpass\"," >> tmpfile
-	   sudo echo "            permissions: \"*\"" >> tmpfile
-	   sudo echo "        }]" >> tmpfile
-	   sudo echo "    }," >> tmpfile
-	   sudo echo " " >> tmpfile
-	   sudo echo "    httpNodeAuth: {user:\"$username\", pass:\"$bcryptuserpass\"}" >> tmpfile
-	   sudo echo "}" >> tmpfile
-	   sudo cat tmpfile >> settings.js
-	   sudo rm -f tmpfile
-	   else
-			printf "${IRed}!!!! Settings.JS already present and modified, skipping! ${IWhite}\r\n"
-	   fi
-	   sed -i -e 's#\/\/\s*var fs#var fs#' /home/pi/.node-red/settings.js
-	   if [[ $MYMENU == *"phone"* ]]; then
-			cd && sudo mv /etc/init.d/sendsigs .
-	   else
-			sudo systemctl enable nodered.service
-	   fi
-	else
-		printf "${IRed}!!!! Node-Red not installed! ${IWhite}\r\n"
-	fi
+    # if nodejs does not exist, abort node-red install
+    if [ -f /usr/bin/node ] || [ -f /usr/local/bin/node ]; then
+        # prevent double additions to settings.js if it exists and is already modified
+        if [ $(grep public ~/.node-red/settings.js 2> /dev/null | wc -l) -ne 1 ]; then
+            sudo npm $NQUIET install -g --unsafe-perm node-red > /dev/null
+            if [[ $MYMENU == *"phone"* ]]; then
+                sudo wget -O /etc/init.d/nodered https://gist.githubusercontent.com/bigmonkeyboy/9962293/raw/0fe19671b1aef8e56cbcb20f6677173f8495e539/nodered
+                sudo chmod 755 /etc/init.d/nodered && sudo update-rc.d nodered defaults
+            else
+                echo | openssl s_client -showcerts -servername raw.githubusercontent.com -connect raw.githubusercontent.com:443 2>/dev/null | openssl x509 -inform pem -noout -text > /dev/null 2>&1
+                [[ $? -ne 0 ]] && echo 151.101.128.133 raw.githubusercontent.com | sudo tee -a /etc/hosts
+                sudo wget --no-check-certificate https://raw.githubusercontent.com/node-red/raspbian-deb-package/master/resources/nodered.service -O /lib/systemd/system/nodered.service
+                sudo wget --no-check-certificate https://raw.githubusercontent.com/node-red/raspbian-deb-package/master/resources/node-red-start -O /usr/bin/node-red-start
+                sudo wget --no-check-certificate https://raw.githubusercontent.com/node-red/raspbian-deb-package/master/resources/node-red-stop -O /usr/bin/node-red-stop
+                #sudo sed -i -e 's#=pi#=%USER#g' /lib/systemd/system/nodered.service
+                sudo chmod +x /usr/bin/node-red-st*
+                sudo systemctl daemon-reload
+            fi
+            
+            cd
+            mkdir .node-red
+            cd .node-red
+            printstatus "Installing Nodes (could take some time)"
+            npm $NQUIET install moment > /dev/null
+            npm $NQUIET install node-red-contrib-config > /dev/null
+            npm $NQUIET install node-red-contrib-grove > /dev/null
+            npm $NQUIET install node-red-contrib-bigtimer > /dev/null
+            npm $NQUIET install node-red-contrib-esplogin > /dev/null
+            npm $NQUIET install node-red-contrib-timeout > /dev/null
+            npm $NQUIET install node-red-node-openweathermap > /dev/null
+            npm $NQUIET install node-red-node-google > /dev/null
+            npm $NQUIET install node-red-node-sqlite > /dev/null
+            npm $NQUIET install node-red-node-emoncms > /dev/null
+            npm $NQUIET install node-red-node-geofence > /dev/null
+            npm $NQUIET install node-red-contrib-ivona > /dev/null
+            npm $NQUIET install node-red-contrib-moment > /dev/null
+            npm $NQUIET install node-red-contrib-particle > /dev/null
+            npm $NQUIET install node-red-contrib-web-worldmap > /dev/null
+            npm $NQUIET install node-red-contrib-graphs > /dev/null
+            npm $NQUIET install node-red-contrib-isonline > /dev/null
+            npm $NQUIET install node-red-node-ping > /dev/null
+            npm $NQUIET install node-red-node-random > /dev/null
+            npm $NQUIET install node-red-node-smooth > /dev/null
+            npm $NQUIET install node-red-contrib-npm > /dev/null
+            npm $NQUIET install node-red-contrib-file-function > /dev/null
+            npm $NQUIET install node-red-contrib-boolean-logic > /dev/null
+            npm $NQUIET install node-red-node-arduino > /dev/null
+            npm $NQUIET install node-red-contrib-blynk-websockets > /dev/null
+            npm $NQUIET install node-red-dashboard > /dev/null
+            npm $NQUIET install node-red-node-darksky > /dev/null
+            npm $NQUIET install node-red-node-serialport > /dev/null
+            npm $NQUIET install node-red-contrib-owntracks > /dev/null
+            npm $NQUIET install node-red-contrib-chatbot > /dev/null
+            
+            sudo npm $NQUIET install bcryptjs > /dev/null
+            
+            if [[ $OPSYS == *"RASPBIAN"* ]]; then
+                sudo sed -i -e 's#exit 0#chmod 777 /dev/ttyAMA0\nexit 0#g' /etc/rc.local
+                sudo apt-get -y install python{,3}-rpi.gpio
+                npm $NQUIET install node-red-contrib-gpio > /dev/null
+                npm $NQUIET install raspi-io > /dev/null
+            fi
+            
+            cd ~/.node-red/
+            sudo service nodered start ; while [ ! -f settings.js ] ; do sudo sleep 1 ; done ; sudo service nodered stop;
+            echo " "
+            bcryptadminpass=$(node -e "console.log(require('bcryptjs').hashSync(process.argv[1], 8));" $adminpass)
+            bcryptuserpass=$(node -e "console.log(require('bcryptjs').hashSync(process.argv[1], 8));" $userpass)
+            # echo Encrypted password: $bcryptpass
+            cp settings.js settings.js.bak-pre-crypt
+            
+            datetimestamp=`date +%Y-%m-%d_%Hh%Mm`
+            cd ~/.node-red
+            # this will add the TOP piece of code for non-vol variables in settings.js
+            gawk -i inplace -v INPLACE_SUFFIX=-$datetimestamp '!found && /module.exports/ { print " var mySettings;\n try {\n mySettings = require(\"/home/pi/.node-red/redvars.js\");\n } catch(err) {\n mySettings = {};\n }\n"; found=1 } 1' settings.js
+            
+            sudo sed -i -e 's#functionGlobalContext: {#\/\/ functionGlobalContext: {#g' settings.js
+            sudo sed -i -e 's#\s\s\s\s\},#    \/\/ },#g' settings.js
+            sudo sed -i -e 's#^\}#,#g' settings.js
+            sudo echo " " > tmpfile
+            sudo echo "    httpStatic: '/home/pi/.node-red/public'," >> tmpfile
+            sudo echo "    functionGlobalContext: {" >> tmpfile
+            sudo echo "        os:require('os')," >> tmpfile
+            sudo echo "        moment:require('moment'), " >> tmpfile
+            sudo echo "        fs:require('fs'), " >> tmpfile
+            sudo echo "        mySettings:mySettings " >> tmpfile
+            sudo echo "    }," >> tmpfile
+            sudo echo " " >> tmpfile
+            sudo echo "    adminAuth: {" >> tmpfile
+            sudo echo "        type: \"credentials\"," >> tmpfile
+            sudo echo "        users: [{" >> tmpfile
+            sudo echo "            username: \"$adminname\"," >> tmpfile
+            sudo echo "            password: \"$bcryptadminpass\"," >> tmpfile
+            sudo echo "            permissions: \"*\"" >> tmpfile
+            sudo echo "        }]" >> tmpfile
+            sudo echo "    }," >> tmpfile
+            sudo echo " " >> tmpfile
+            sudo echo "    httpNodeAuth: {user:\"$username\", pass:\"$bcryptuserpass\"}" >> tmpfile
+            sudo echo "}" >> tmpfile
+            sudo cat tmpfile >> settings.js
+            sudo rm -f tmpfile
+        else
+            printf "${IRed}!!!! Settings.JS already present and modified, skipping! ${IWhite}\r\n"
+        fi
+        sed -i -e 's#\/\/\s*var fs#var fs#' /home/pi/.node-red/settings.js
+        if [[ $MYMENU == *"phone"* ]]; then
+            cd && sudo mv /etc/init.d/sendsigs .
+        else
+            sudo systemctl enable nodered.service
+        fi
+    else
+        printf "${IRed}!!!! Node-Red not installed! ${IWhite}\r\n"
+    fi
 fi
 
 
