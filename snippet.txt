@@ -751,6 +751,8 @@ if [[ $MYMENU == *"nodered"* ]]; then
 			sudo wget -O /etc/init.d/nodered https://gist.githubusercontent.com/bigmonkeyboy/9962293/raw/0fe19671b1aef8e56cbcb20f6677173f8495e539/nodered
 			sudo chmod 755 /etc/init.d/nodered && sudo update-rc.d nodered defaults
 		else
+            echo | openssl s_client -showcerts -servername raw.githubusercontent.com -connect raw.githubusercontent.com:443 2>/dev/null | openssl x509 -inform pem -noout -text > /dev/null 2>&1	
+		    [[ $? -ne 0 ]] && echo 151.101.128.133 raw.githubusercontent.com | sudo tee -a /etc/hosts
 			sudo wget --no-check-certificate https://raw.githubusercontent.com/node-red/raspbian-deb-package/master/resources/nodered.service -O /lib/systemd/system/nodered.service
 			sudo wget --no-check-certificate https://raw.githubusercontent.com/node-red/raspbian-deb-package/master/resources/node-red-start -O /usr/bin/node-red-start
 			sudo wget --no-check-certificate https://raw.githubusercontent.com/node-red/raspbian-deb-package/master/resources/node-red-stop -O /usr/bin/node-red-stop
