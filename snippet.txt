@@ -21,6 +21,8 @@
 ## 6. Do not access this script as SUDO.
 ##
 ## See http://tech.scargill.net/orange-pi-pc-battle-of-the-pis/
+## 26/04/2017 added option for Log2Ram
+## 26/04/2017 Updated NodeJS as they took the previous version off the server!!!
 ## 29/03/2017 Tested on NanoPi Neo2 using Armbian nightly build of 27/03/2017 - added temperature and processor checks
 ## 25/03/2017 Tested on NanoPi M1+, host updating added and defaults on inputs added
 ## 18/03/2017 Tested on NanoPi M3
@@ -366,7 +368,7 @@ SECONDS=0
 
 if [[ $OPSYS == *"RASPBIAN"* ]];then
     MYMENU=$(whiptail --title "Main Raspberry Pi Selection" --checklist \
-        "\nSelect items for your Pi as required then hit OK" 29 73 22 \
+        "\nSelect items for your Pi as required then hit OK" 30 73 23 \
         "quiet" "Quiet(er) install - untick for lots of info " ON \
         "prereq" "Install general pre-requisites " ON \
         "phone" "Install on Android Smartphone - see blog" OFF \
@@ -388,11 +390,12 @@ if [[ $OPSYS == *"RASPBIAN"* ]];then
         "installmc" "Install MC+MCEDIT  file manager + editor " ON \
         "installjed" "Install JED file editor" OFF \
         "habridge" "Install HA-bridge on port 82" OFF \
+        "log2ram" "Install Log2RAM default 40Meg" OFF \		
         "wolfram" "Remove Wolfram on a PI to save space" OFF \
     "office" "Remove LibreOffice on PI to save space" OFF 3>&1 1>&2 2>&3)
 else
     MYMENU=$(whiptail --title "Main Non-Pi Selection" --checklist \
-        "\nSelect items as required then hit OK" 30 74 23 \
+        "\nSelect items as required then hit OK" 31 74 24 \
         "quiet" "Quiet(er) install - untick for lots of info " ON \
         "prereq" "Install general pre-requisites" ON \
         "phone" "Install on Android Smartphone - see blog" OFF \
@@ -415,6 +418,7 @@ else
         "installcu" "Install CU for serial VT100 Terminal" ON \
         "installmc" "Install MC+MCEDIT file manager + editor" ON \
         "installjed" "Install JED file editor" OFF \
+		"log2ram" "Install Log2RAM default 40Meg" OFF \	
     "habridge" "Install HA-bridge on port 82" OFF 3>&1 1>&2 2>&3)
 fi
 
@@ -1016,6 +1020,17 @@ if [[ $MYMENU == *"installjed"* ]]; then
     printstatus "Installing JED Editor"
     sudo apt-get $AQUIET -y install jed
 fi
+
+if [[ $MYMENU == *"log2ram"* ]]; then
+    printstatus "Installing Log2Ram"
+    cd
+	git clone https://github.com/azlux/log2ram.git
+    cd log2ram
+    chmod +x install.sh
+    sudo ./install.sh
+	cd
+fi
+
 
 # Drop in an index file and css for a menu page
 if [[ $MYMENU == *"addindex"* ]]; then
