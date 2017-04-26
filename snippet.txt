@@ -709,22 +709,22 @@ if [[ $MYMENU == *"nodejs"* ]]; then
     printstatus "Installing NodeJS"
     if [[ $(uname -m) == *"armv6"* ]]; then
         printstatus "Installing ARM6 version"
-        wget --no-check-certificate https://nodejs.org/dist/latest-v6.x/node-v6.10.1-linux-armv6l.tar.xz
+        wget --no-check-certificate https://nodejs.org/dist/latest-v6.x/node-v6.10.2-linux-armv6l.tar.xz
         [ $? -eq 0 ] && nodejs=1
-        pv node-v6.10.1-linux-armv6l.tar.xz | tar -xJf -
-        cd node-v6.10.1-linux-armv6l
+        pv node-v6.10.2-linux-armv6l.tar.xz | tar -xJf -
+        cd node-v6.10.2-linux-armv6l
         sudo cp -R * /usr/local/
-        rm -f node-v6.10.1-linux-armv6l.tar.xz
+        rm -f node-v6.10.2-linux-armv6l.tar.xz
     else
         if [[ $CHECK64 == *"aarch64"* ]]; then
             
             printstatus "Installing ARM64 version"
-            wget --no-check-certificate https://nodejs.org/dist/latest-v6.x/node-v6.10.1-linux-arm64.tar.xz
+            wget --no-check-certificate https://nodejs.org/dist/latest-v6.x/node-v6.10.2-linux-arm64.tar.xz
             [ $? -eq 0 ] && nodejs=1
-            pv node-v6.10.1-linux-arm64.tar.xz | tar -xJf -
-            cd node-v6.10.1-linux-arm64
+            pv node-v6.10.2-linux-arm64.tar.xz | tar -xJf -
+            cd node-v6.10.2-linux-arm64
             sudo cp -R * /usr/local/
-            rm -f node-v6.10.1-linux-arm64.tar.xz
+            rm -f node-v6.10.2-linux-arm64.tar.xz
         else
             
             curl -sL https://deb.nodesource.com/setup_6.x > nodesetup.sh
