@@ -20,6 +20,8 @@
 ## 5. For Node-Red on Pi Zero,  if serial port won't connect - look at serial port permissions in /dev/
 ## 6. Do not access this script as SUDO.
 ##
+## For Log2RAM customising see this - https://github.com/azlux/log2ram
+##
 ## See http://tech.scargill.net/orange-pi-pc-battle-of-the-pis/
 ## 26/04/2017 added option for Log2Ram
 ## 26/04/2017 Updated NodeJS as they took the previous version off the server!!!
